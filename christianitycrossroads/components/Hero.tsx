@@ -32,8 +32,10 @@ export function Hero() {
           {/* Heading */}
           <div className="space-y-4">
             <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-bold text-white leading-tight">
-              Christianity
+              Christianity  
+              <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">at</span>
               <br />
+
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 Crossroads
               </span>
