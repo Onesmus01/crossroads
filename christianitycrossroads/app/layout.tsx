@@ -2,6 +2,10 @@ import React from "react"
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import { RootLayoutClient } from './layout-client';
+import { ContextProvider } from "@/context/userContext"; 
+import { Toaster } from "react-hot-toast";
+
+
 
 import './globals.css';
 
@@ -25,7 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground transition-colors duration-300">
+        <ContextProvider>
+
         <RootLayoutClient>{children}</RootLayoutClient>
+        <Toaster position="top-right" />
+    </ContextProvider>
       </body>
     </html>
   );
