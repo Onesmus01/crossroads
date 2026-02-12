@@ -12,11 +12,13 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(helmet())
-app.use('/api/user',userRouter)
 app.use(cors({
     origin: ["http://localhost:3000"],
     credentials: true
 }))
+app.use('/api/user',userRouter)
+app.use('/api/payment',paymentRouter)
+
 connectDb()
 
 const PORT = process.env.PORT || 8080;
