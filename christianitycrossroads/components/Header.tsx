@@ -109,7 +109,7 @@ export function Header() {
                   </div>
 
                   {user.role === "admin" && (
-                    <Link href="/admin" className="block px-3 py-2 rounded-md hover:bg-muted transition">
+                    <Link href="/admin/dashboard" className="block px-3 py-2 rounded-md hover:bg-muted transition">
                       Admin Dashboard
                     </Link>
                   )}
