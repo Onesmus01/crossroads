@@ -1,3 +1,7 @@
+import User from "../models/userModel.js";
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+
 export const signIn = async(req,res)=> {
     try {
         const {email,password} = req.body
@@ -127,3 +131,4 @@ export const updateUser = async(req,res)=> {
   }
     
 }
+

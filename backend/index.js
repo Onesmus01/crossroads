@@ -7,6 +7,8 @@ import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import userRouter from './routes/userRoute.js'
 import paymentRouter from './routes/paymentRoute.js'
+import wishlistRouter from './routes/wishlistRoute.js'
+
 const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
@@ -18,6 +20,7 @@ app.use(cors({
 }))
 app.use('/api/user',userRouter)
 app.use('/api/payment',paymentRouter)
+app.use('/api/wishlist',wishlistRouter)
 
 connectDb()
 
