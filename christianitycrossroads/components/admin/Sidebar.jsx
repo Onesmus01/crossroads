@@ -36,7 +36,7 @@ const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
 
-        <Link href="/admin" className={linkStyle("/admin")}>
+        <Link href="/admin/dashboard" className={linkStyle("/admin")}>
           <span className="flex items-center gap-3">
             <FaHome /> Dashboard
           </span>
