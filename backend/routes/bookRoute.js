@@ -1,4 +1,6 @@
 import express from "express";
+import multer from "multer";
+import path from "path";
 import {
   addBook,
   getAllBooks,
@@ -7,34 +9,79 @@ import {
   deleteBook,
 } from "../controllers/bookController.js";
 import authToken from "../middleware/authToken.js";
+import isAdmin from "../middleware/adminAuth.js";
 
 const router = express.Router();
 
-// ---------------- Public Routes ----------------
-router.get("/", getAllBooks);           // Get all books
-router.get("/:id", getBookById);        // Get a single book by ID
 
-// ---------------- Protected Routes ----------------
-// Only admin can add, update, delete
-router.post("/", authToken, async (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Access denied" });
-  }
-  next();
-}, addBook);
+// ================= MULTER CONFIG =================
 
-router.put("/:id", authToken, async (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Access denied" });
-  }
-  next();
-}, updateBook);
+// Storage config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    if (file.mimetype === "application/pdf") {
+      cb(null, "uploads/books"); // PDFs
+    } else {
+      cb(null, "uploads/covers"); // Images
+    }
+  },
+  filename: function (req, file, cb) {
+    const uniqueName = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, uniqueName + path.extname(file.originalname));
+  },
+});
 
-router.delete("/:id", authToken, async (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(403).json({ message: "Access denied" });
+// File filter (only allow PDF + images)
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "application/pdf" ||
+    file.mimetype.startsWith("image/")
+  ) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only PDF and image files are allowed"), false);
   }
-  next();
-}, deleteBook);
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB max
+});
+
+
+// ================= PUBLIC ROUTES =================
+
+router.get("/all-books", getAllBooks);
+router.get("/:id", getBookById);
+
+
+// Add book (PDF + Cover upload)
+router.post(
+  "/add",
+  authToken,
+  isAdmin,
+  upload.fields([
+    { name: "pdf", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  addBook
+);
+
+
+// Update book (optional new files)
+router.put(
+  "/:id",
+  authToken,
+  isAdmin,
+  upload.fields([
+    { name: "pdf", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  updateBook
+);
+
+
+router.delete("/:id", authToken, isAdmin, deleteBook);
 
 export default router;

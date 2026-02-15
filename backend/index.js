@@ -8,6 +8,8 @@ import helmet from 'helmet'
 import userRouter from './routes/userRoute.js'
 import paymentRouter from './routes/paymentRoute.js'
 import wishlistRouter from './routes/wishlistRoute.js'
+import bookRouter from './routes/bookRoute.js'
+import notificationRouter from './routes/notificationRoute.js'
 
 const app = express()
 app.use(express.json())
@@ -21,6 +23,8 @@ app.use(cors({
 app.use('/api/user',userRouter)
 app.use('/api/payment',paymentRouter)
 app.use('/api/wishlist',wishlistRouter)
+app.use('/api/book',bookRouter)
+app.use('/api/notification', notificationRouter)
 
 connectDb()
 

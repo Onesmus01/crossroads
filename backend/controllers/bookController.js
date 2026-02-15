@@ -4,27 +4,34 @@ import mongoose from "mongoose";
 // Add a new book
 export const addBook = async (req, res) => {
   try {
-    const { title, description, price, fileUrl, coverImage } = req.body;
+    const { title, description, price } = req.body;
 
-    // Basic validation
     if (!title || !description || !price) {
       return res.status(400).json({ message: "Title, description, and price are required" });
     }
 
-    if (typeof price !== "number") {
+    const numericPrice = Number(price);
+    if (isNaN(numericPrice)) {
       return res.status(400).json({ message: "Price must be a number" });
     }
 
-    // Create book
+    const pdfFile = req.files?.pdf?.[0];
+    const coverFile = req.files?.cover?.[0];
+
     const newBook = await Book.create({
       title,
       description,
-      price,
-      fileUrl: fileUrl || "",
-      coverImage: coverImage || "",
+      price: numericPrice,
+      fileUrl: pdfFile ? pdfFile.path : "",
+      coverImage: coverFile ? coverFile.path : "",
     });
 
-    res.status(201).json({ message: "Book added successfully", book: newBook });
+    res.status(201).json({
+      success: true,
+      message: "Book added successfully",
+      book: newBook,
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

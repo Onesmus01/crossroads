@@ -10,6 +10,7 @@ import Book from '../models/bookModel.js';
 import Payment from '../models/paymentModel.js';
 import MpesaLog from '../models/mpesaLog.js';
 import transporter from '../config/nodemailer.js';
+import isAdmin from '../middleware/adminAuth.js';
 
 dotenv.config();
 const paymentRouter = express.Router();
@@ -233,4 +234,17 @@ paymentRouter.get('/mpesa/status/:transactionId', authToken, async (req, res) =>
   });
 });
 
+
+paymentRouter.get("/all-payments", authToken, isAdmin, async (req, res) => {
+  try {
+    const payments = await Payment.find()
+      .populate("user", "name email")
+      .populate("book", "title price");
+
+    res.status(200).json({ success: true, payments });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Failed to fetch payments", error: err.message });
+  }
+});
 export default paymentRouter;

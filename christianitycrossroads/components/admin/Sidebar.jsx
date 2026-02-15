@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useContext } from "react";
+import { Context } from "../../context/userContext";
 import {
   FaBook,
   FaHome,
@@ -18,6 +20,9 @@ import {
 const Sidebar = () => {
   const pathname = usePathname();
 
+  const context = useContext(Context);
+  const user = context?.user;
+
   const linkStyle = (path) =>
     `flex items-center justify-between gap-3 p-3 rounded-lg transition-all duration-200 ${
       pathname === path
@@ -29,46 +34,49 @@ const Sidebar = () => {
     <aside className="w-72 bg-gray-950 text-white flex flex-col min-h-screen shadow-2xl border-r border-gray-800">
       
       {/* Header */}
-      <div className="text-2xl font-bold p-6 border-b border-gray-800 bg-gradient-to-r from-purple-700 to-blue-700 text-white">
-        🚀 Admin Boss
+      <div className="flex items-center justify-between text-xl font-bold p-6 border-b border-gray-800 bg-gradient-to-r from-purple-700 to-blue-700 text-white">
+        <span>🚀 Admin Boss</span>
+
+        {user?.role === "admin" && (
+          <div className="w-9 h-9 flex items-center justify-center bg-white text-purple-700 font-bold rounded-full uppercase">
+            {user?.email?.charAt(0)}
+          </div>
+        )}
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
 
-        <Link href="/admin/dashboard" className={linkStyle("/admin")}>
+        <Link href="/admin/dashboard" className={linkStyle("/admin/dashboard")}>
           <span className="flex items-center gap-3">
             <FaHome /> Dashboard
           </span>
         </Link>
 
-        <Link href="/admin/books" className={linkStyle("/admin/books")}>
+        <Link href="/admin/book" className={linkStyle("/admin/books")}>
           <span className="flex items-center gap-3">
             <FaBook /> Books
           </span>
         </Link>
 
-        <Link href="/admin/books/add" className={linkStyle("/admin/books/add")}>
+        <Link href="/admin/book/add" className={linkStyle("/admin/books/add")}>
           <span className="flex items-center gap-3">
             <FaPlus /> Add Book
           </span>
         </Link>
 
-        {/* Users */}
         <Link href="/admin/users" className={linkStyle("/admin/users")}>
           <span className="flex items-center gap-3">
             <FaUsers /> Users
           </span>
         </Link>
 
-        {/* Payments */}
         <Link href="/admin/payments" className={linkStyle("/admin/payments")}>
           <span className="flex items-center gap-3">
             <FaMoneyBillWave /> Payments
           </span>
         </Link>
 
-        {/* Emails */}
         <Link href="/admin/emails" className={linkStyle("/admin/emails")}>
           <span className="flex items-center gap-3">
             <FaEnvelope /> Emails
@@ -78,21 +86,18 @@ const Sidebar = () => {
           </span>
         </Link>
 
-        {/* Notifications */}
         <Link href="/admin/notifications" className={linkStyle("/admin/notifications")}>
           <span className="flex items-center gap-3">
             <FaBell /> Notifications
           </span>
         </Link>
 
-        {/* Analytics */}
         <Link href="/admin/analytics" className={linkStyle("/admin/analytics")}>
           <span className="flex items-center gap-3">
             <FaChartBar /> Analytics
           </span>
         </Link>
 
-        {/* Settings */}
         <Link href="/admin/settings" className={linkStyle("/admin/settings")}>
           <span className="flex items-center gap-3">
             <FaCog /> Settings
