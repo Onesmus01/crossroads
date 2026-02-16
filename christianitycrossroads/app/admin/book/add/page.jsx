@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState } from "react";
 import { FaBook, FaUpload, FaDollarSign, FaImage } from "react-icons/fa";
@@ -18,10 +18,7 @@ export default function AddBookPage() {
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -39,14 +36,12 @@ export default function AddBookPage() {
       data.append("title", formData.title);
       data.append("description", formData.description);
       data.append("price", formData.price);
-      data.append("pdf", pdfFile);      // must match multer field
-      if (coverFile) {
-        data.append("cover", coverFile); // must match multer field
-      }
+      data.append("pdf", pdfFile);
+      if (coverFile) data.append("cover", coverFile);
 
       const res = await fetch(`${backendUrl}/book/add`, {
         method: "POST",
-        body: data,
+        body: data, // ✅ Send multipart/form-data
         credentials: "include",
       });
 
@@ -54,18 +49,14 @@ export default function AddBookPage() {
 
       if (result.success) {
         alert("Book added successfully!");
-        setFormData({
-          title: "",
-          description: "",
-          price: "",
-        });
+        setFormData({ title: "", description: "", price: "" });
         setPdfFile(null);
         setCoverFile(null);
       } else {
         alert(result.message || "Something went wrong");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       alert("Error adding book");
     }
 
@@ -74,21 +65,15 @@ export default function AddBookPage() {
 
   return (
     <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl p-8">
-      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <FaBook className="text-2xl text-purple-600" />
-        <h1 className="text-2xl font-bold text-gray-800">
-          Add New Book
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800">Add New Book</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Book Title
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Book Title</label>
           <input
             type="text"
             name="title"
@@ -101,9 +86,7 @@ export default function AddBookPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Description
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>
           <textarea
             name="description"
             rows="4"
@@ -116,9 +99,7 @@ export default function AddBookPage() {
 
         {/* Price */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Price (KES)
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Price (KES)</label>
           <div className="relative">
             <FaDollarSign className="absolute left-3 top-3 text-gray-400" />
             <input
@@ -134,9 +115,7 @@ export default function AddBookPage() {
 
         {/* PDF Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Upload PDF File
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Upload PDF File</label>
           <div className="relative">
             <FaUpload className="absolute left-3 top-3 text-gray-400" />
             <input
@@ -149,11 +128,9 @@ export default function AddBookPage() {
           </div>
         </div>
 
-        {/* Cover Image Upload */}
+        {/* Cover Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Upload Cover Image
-          </label>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Upload Cover Image</label>
           <div className="relative">
             <FaImage className="absolute left-3 top-3 text-gray-400" />
             <input

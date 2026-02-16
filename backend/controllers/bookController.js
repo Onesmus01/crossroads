@@ -1,7 +1,36 @@
 import Book from "../models/bookModel.js";
 import mongoose from "mongoose";
+import cloudinary from 'cloudinary';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Add a new book
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// ✅ Add Book with automatic Cloudinary upload
+import streamifier from "streamifier";
+
+
+
+// ✅ Upload file buffer to Cloudinary via stream
+export const uploadToCloudinaryStream = (buffer, folder, resource_type = "auto") => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.v2.uploader.upload_stream(
+      { folder, resource_type },
+      (error, result) => {
+        if (result) resolve(result.secure_url);
+        else reject(error);
+      }
+    );
+
+    streamifier.createReadStream(buffer).pipe(stream);
+  });
+};
+
 export const addBook = async (req, res) => {
   try {
     const { title, description, price } = req.body;
@@ -15,15 +44,28 @@ export const addBook = async (req, res) => {
       return res.status(400).json({ message: "Price must be a number" });
     }
 
-    const pdfFile = req.files?.pdf?.[0];
-    const coverFile = req.files?.cover?.[0];
+    if (!req.files || !req.files.pdf) {
+      return res.status(400).json({ message: "PDF file is required" });
+    }
 
+    // ✅ Upload PDF
+    const pdfBuffer = req.files.pdf[0].buffer;
+    const pdfUrl = await uploadToCloudinaryStream(pdfBuffer, "books/files", "raw");
+
+    // ✅ Upload Cover if exists
+    let coverUrl = "";
+    if (req.files.cover) {
+      const coverBuffer = req.files.cover[0].buffer;
+      coverUrl = await uploadToCloudinaryStream(coverBuffer, "books/covers", "image");
+    }
+
+    // ✅ Save to MongoDB
     const newBook = await Book.create({
       title,
       description,
       price: numericPrice,
-      fileUrl: pdfFile ? pdfFile.path : "",
-      coverImage: coverFile ? coverFile.path : "",
+      fileUrl: pdfUrl,
+      coverImage: coverUrl,
     });
 
     res.status(201).json({
@@ -31,12 +73,13 @@ export const addBook = async (req, res) => {
       message: "Book added successfully",
       book: newBook,
     });
-
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 // Get all books
 export const getAllBooks = async (req, res) => {

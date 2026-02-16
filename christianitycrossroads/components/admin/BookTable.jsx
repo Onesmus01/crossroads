@@ -5,6 +5,7 @@ export default function BookTable({ books, onDelete }) {
     <table className="w-full table-auto border border-gray-300 rounded-md">
       <thead className="bg-gray-200">
         <tr>
+          <th className="px-4 py-2 border">Cover</th>
           <th className="px-4 py-2 border">Title</th>
           <th className="px-4 py-2 border">Price</th>
           <th className="px-4 py-2 border">Actions</th>
@@ -13,8 +14,23 @@ export default function BookTable({ books, onDelete }) {
       <tbody>
         {books.map((book) => (
           <tr key={book._id} className="hover:bg-gray-100">
+            
+            {/* ✅ Real Image Here */}
+            <td className="px-4 py-2 border">
+              {book.coverImage ? (
+                <img
+                  src={book.coverImage}
+                  alt={book.title}
+                  className="w-16 h-20 object-cover rounded"
+                />
+              ) : (
+                <span className="text-gray-400">No Image</span>
+              )}
+            </td>
+
             <td className="px-4 py-2 border">{book.title}</td>
             <td className="px-4 py-2 border">${book.price}</td>
+
             <td className="px-4 py-2 border flex gap-2">
               <button className="bg-blue-600 text-white px-2 py-1 rounded">
                 Edit

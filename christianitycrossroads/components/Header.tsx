@@ -179,7 +179,7 @@ export function Header() {
 
           {user ? (
             <>
-              {user.role === "admin" && <Link href="/admin" className="block py-2 px-2 rounded-md hover:bg-muted transition">Admin Dashboard</Link>}
+              {user.role === "admin/dashboard" && <Link href="/admin" className="block py-2 px-2 rounded-md hover:bg-muted transition">Admin Dashboard</Link>}
               <Link href="/manageProfile" className="block py-2 px-2 rounded-md hover:bg-muted transition">Manage Profile</Link>
               <Link href="/wishlist" className="block py-2 px-2 rounded-md hover:bg-muted transition">My Wishlist</Link>
               <Link href="/orders" className="block py-2 px-2 rounded-md hover:bg-muted transition">My Orders</Link>

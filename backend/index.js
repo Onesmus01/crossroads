@@ -10,6 +10,15 @@ import paymentRouter from './routes/paymentRoute.js'
 import wishlistRouter from './routes/wishlistRoute.js'
 import bookRouter from './routes/bookRoute.js'
 import notificationRouter from './routes/notificationRoute.js'
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+
+// ✅ Convert import.meta.url to __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 
 const app = express()
 app.use(express.json())
@@ -26,7 +35,11 @@ app.use('/api/wishlist',wishlistRouter)
 app.use('/api/book',bookRouter)
 app.use('/api/notification', notificationRouter)
 
+
 connectDb()
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 const PORT = process.env.PORT || 8080;
 
