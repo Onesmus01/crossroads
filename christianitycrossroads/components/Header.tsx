@@ -46,11 +46,16 @@ export function Header() {
 
   /* ---------------- Logout ---------------- */
   const handleLogout = async () => {
+      const token = localStorage.getItem("token") || "";
+
     try {
       const response = await fetch(`${backendUrl}/user/logout`, {
         method: 'POST',
         credentials: 'include',
-        headers: getAuthHeaders(),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         
       })
       const data = await response.json()
