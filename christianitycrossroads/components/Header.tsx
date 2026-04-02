@@ -75,14 +75,14 @@ export function Header() {
         {/* ---------------- Logo ---------------- */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-            <span className="font-bold text-primary-foreground">✨</span>
+            <Link href="/" className="font-bold text-primary-foreground">✨</Link>
           </div>
-          <div>
+          <Link href={"/"}>
             <h1 className="text-xl font-bold">Christianity Crossroads</h1>
             <p className="text-xs text-muted-foreground">
               Sacred Collection of Faith
             </p>
-          </div>
+          </Link>
         </div>
 
         {/* ---------------- Desktop Nav ---------------- */}
