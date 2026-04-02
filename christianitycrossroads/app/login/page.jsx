@@ -22,8 +22,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const router = useRouter()
-  const { fetchUserDetails, fetchCountCart } = useContext(Context)
-
+    const { setUserDetails } = useContext(Context)
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({
@@ -66,9 +65,7 @@ const Login = () => {
 
       toast.success(responseData.message || "Login successful!");
 
-      await fetchUserDetails();
-      await fetchCountCart();
-
+      
       router.push("/"); // Next.js navigation
     } catch (error) {
       console.error("Login error:", error);
