@@ -14,22 +14,28 @@ export const ContextProvider = ({ children }) => {
   const [user, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true); // ✅ track loading
 
-  const fetchUserDetails = async () => {
-    setLoading(true);
+    const fetchUserDetails = async () => {
     try {
+      const token = localStorage.getItem("token") || "";
       const res = await fetch(`${backendUrl}/user/user-details`, {
         method: "GET",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       const data = await res.json();
-      if (res.ok) setUserDetails(data.data);
-      else toast.error(data.message || "Failed to fetch user details");
+      if (data.data) dispatch(setUserDetails(data.data));
+      console.log("User details fetched:", data.data);
     } catch (err) {
-      toast.error(err.message || "Something went wrong");
-    } finally {
-      setLoading(false); // ✅ stop loading after fetch
+      console.error("Network error:", err.message);
     }
   };
+
+  useEffect(() => {
+    fetchUserDetails();
+  }, []);
 
   useEffect(() => {
     fetchUserDetails();
