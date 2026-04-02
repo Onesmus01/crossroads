@@ -2,44 +2,77 @@ import User from "../models/userModel.js";
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-export const signIn = async(req,res)=> {
-    try {
-        const {email,password} = req.body
-        if (!email) return res.status(400).json({ success: false, message: "Please provide email" });
-        if (!password) return res.status(400).json({ success: false, message: "Please provide password" });
+export const signIn = async (req, res) => {
+  try {
+    const { email, password } = req.body;
 
-        const user = await User.findOne({email})
-        if(!user){
-            res.status(400).json({success: false,message: "User does not exist please register"})
-        }
-
-        const passwordExist = await bcrypt.compare(password,user.password)
-        if(!passwordExist){
-            return res.status(400).json({success:false,message: "Invalid credentials"})
-        }
-
-
-            const tokenData = {
-                _id: user._id,
-                email: user.email
-            }
-            const tokenOptions = {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'strict',
-                maxAge: 2 * 24 * 60 * 60 * 1000
-            }
-           const token = jwt.sign(tokenData,process.env.JWT_SECRET,{expiresIn: '2d'})
-           res.cookie('token',token,tokenOptions)
-           res.status(201).json({success: true,message: 'login successful'})
-    
-
-    } catch (error) {
-         res.status(500).json({success: false, message: error.message})
-
+    // Single validation check
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Please provide email and password" 
+      });
     }
 
-}
+    const user = await User.findOne({ email });
+
+    // Security: Don't reveal if email exists
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const passwordExist = await bcrypt.compare(password, user.password);
+
+    if (!passwordExist) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    const tokenData = {
+      _id: user._id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = jwt.sign(tokenData, process.env.JWT_SECRET, {
+      expiresIn: "2d",
+    });
+
+    // Set cookie (works if domains match, ignored if cross-domain)
+    const isProduction = process.env.NODE_ENV === "production";
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",
+      maxAge: 2 * 24 * 60 * 60 * 1000,
+    });
+
+    // Return token for Authorization header (cross-domain fallback)
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      token,  // 🔥 Frontend stores this for headers
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+
+  } catch (error) {
+    console.error("SignIn error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Login failed",
+    });
+  }
+};
 
 export const signUp = async (req,res) => {
     try {
