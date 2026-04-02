@@ -46,10 +46,7 @@ export const ContextProvider = ({ children }) => {
     fetchUserDetails();
   }, []);
 
-  useEffect(() => {
-    fetchUserDetails();
-  }, []);
-
+  
   return (
     <Context.Provider
       value={{ user, loading, setUserDetails, fetchUserDetails, toast, backendUrl, }}
