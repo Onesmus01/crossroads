@@ -15,7 +15,7 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
 
-  const { user, setUserDetails } = useContext(Context)
+  const { user, setUserDetails,getAuthHeaders } = useContext(Context)
   const dropdownRef = useRef(null)
   const router = useRouter()
 
@@ -50,6 +50,8 @@ export function Header() {
       const response = await fetch(`${backendUrl}/user/logout`, {
         method: 'POST',
         credentials: 'include',
+        headers: getAuthHeaders(),
+        
       })
       const data = await response.json()
 

@@ -3,11 +3,20 @@
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
+
 // Create context
 export const Context = createContext(null);
 
 const backendUrl =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/api";
+
+  const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
 
 // Named export for provider
 export const ContextProvider = ({ children }) => {
@@ -26,7 +35,7 @@ export const ContextProvider = ({ children }) => {
         },
       });
       const data = await res.json();
-      if (data.data) dispatch(setUserDetails(data.data));
+      if (data.data) setUserDetails(data.data);
       console.log("User details fetched:", data.data);
     } catch (err) {
       console.error("Network error:", err.message);
@@ -43,7 +52,7 @@ export const ContextProvider = ({ children }) => {
 
   return (
     <Context.Provider
-      value={{ user, loading, setUserDetails, fetchUserDetails, toast, backendUrl }}
+      value={{ user, loading, setUserDetails, fetchUserDetails, toast, backendUrl, }}
     >
       {children}
     </Context.Provider>
