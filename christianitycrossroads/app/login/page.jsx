@@ -22,7 +22,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const router = useRouter()
-    const { setUserDetails } = useContext(Context)
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({
