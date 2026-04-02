@@ -3,7 +3,10 @@ import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import { RootLayoutClient } from './layout-client';
 import { ContextProvider } from "@/context/userContext"; 
+import { Header } from '@/components/Header';
 import { Toaster } from "react-hot-toast";
+import { Footer } from '@/components/Footer';
+
 
 
 
@@ -30,9 +33,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased bg-background text-foreground transition-colors duration-300">
         <ContextProvider>
+        <Header />
+          
 
         <RootLayoutClient>{children}</RootLayoutClient>
         <Toaster position="top-right" />
+        <Footer />
+        
     </ContextProvider>
       </body>
     </html>

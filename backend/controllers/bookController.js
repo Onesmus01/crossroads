@@ -14,8 +14,6 @@ cloudinary.v2.config({
 // ✅ Add Book with automatic Cloudinary upload
 import streamifier from "streamifier";
 
-
-
 // ✅ Upload file buffer to Cloudinary via stream
 export const uploadToCloudinaryStream = (buffer, folder, resource_type = "auto") => {
   return new Promise((resolve, reject) => {
@@ -30,7 +28,6 @@ export const uploadToCloudinaryStream = (buffer, folder, resource_type = "auto")
     streamifier.createReadStream(buffer).pipe(stream);
   });
 };
-
 export const addBook = async (req, res) => {
   try {
     const { title, description, price } = req.body;
@@ -62,6 +59,7 @@ export const addBook = async (req, res) => {
     // ✅ Save to MongoDB
     const newBook = await Book.create({
       title,
+      author: "Unknown Author", // Placeholder, can be extended to accept author field
       description,
       price: numericPrice,
       fileUrl: pdfUrl,
@@ -78,9 +76,6 @@ export const addBook = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-
-
 // Get all books
 export const getAllBooks = async (req, res) => {
   try {
@@ -91,7 +86,6 @@ export const getAllBooks = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 // Get a single book by ID
 export const getBookById = async (req, res) => {
   const { id } = req.params;

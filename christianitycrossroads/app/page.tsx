@@ -57,10 +57,12 @@ const books = [
 export default function Home() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <Hero />
-      <BooksSection title="Your Collection" description="Explore your curated selection of extraordinary reads" books={books} />
-      <Footer />
+      <BooksSection 
+        title="Featured Books" 
+        description="Handpicked for you"
+        variant="featured"
+      />
     </div>
   );
 }

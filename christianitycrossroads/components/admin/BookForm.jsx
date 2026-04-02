@@ -31,6 +31,7 @@ export default function BookForm({ onSubmit, initialData = {} }) {
           required
         />
       </div>
+      
 
       <div>
         <label className="block mb-1 font-medium">Price</label>

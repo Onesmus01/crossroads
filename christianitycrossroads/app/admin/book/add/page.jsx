@@ -84,6 +84,20 @@ export default function AddBookPage() {
           />
         </div>
 
+        {/* Author */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Author</label>
+          <input
+            type="text"
+            name="author"
+            value={formData.author}
+            onChange={handleChange}
+            required
+            className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+        </div>
+
+
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">Description</label>

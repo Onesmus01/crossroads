@@ -93,37 +93,44 @@ const sendPaymentEmail = async (email, name, amount, transactionId, bookTitle) =
 paymentRouter.post('/mpesa/pay', authToken, async (req, res) => {
   try {
     let { phone, bookId } = req.body;
-
     phone = sanitizeInput(phone);
 
+    console.log('📱 Payment Request:', { phone, bookId, userId: req.userId }); // DEBUG
+
     if (!phone || !bookId) {
-      return res.status(400).json({ success: false, message: 'Invalid input' });
+      return res.status(400).json({ success: false, message: 'Phone and bookId required' });
     }
 
+    // Phone formatting
     if (phone.startsWith('0')) phone = '254' + phone.slice(1);
-
     if (!/^(2547|2541)\d{8}$/.test(phone)) {
-      return res.status(400).json({ success: false, message: 'Invalid Kenyan phone number' });
+      return res.status(400).json({ success: false, message: 'Invalid phone format' });
     }
 
     const user = await User.findById(req.userId);
     const book = await Book.findById(bookId);
 
-    if (!user || !book)
-      return res.status(404).json({ success: false, message: 'User or Book not found' });
+    console.log('👤 User:', user?.name, '📚 Book:', book?.title); // DEBUG
 
-    // Prevent duplicate purchase
-    if (user.purchasedBooks.includes(bookId)) {
-      return res.status(400).json({ success: false, message: 'You already own this book' });
+    if (!user || !book) {
+      return res.status(404).json({ success: false, message: 'User or Book not found' });
     }
 
-    const amount = book.price;
+    if (user.purchasedBooks.includes(bookId)) {
+      return res.status(400).json({ success: false, message: 'Already purchased' });
+    }
+
+    // Check env vars
+    if (!MPESA_CONSUMER_KEY || !MPESA_PASSKEY) {
+      console.error('❌ Missing MPESA env vars');
+      return res.status(500).json({ success: false, message: 'Server config error' });
+    }
 
     const token = await getMpesaToken();
     const timestamp = new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14);
-    const password = Buffer.from(
-      `${MPESA_SHORTCODE}${MPESA_PASSKEY}${timestamp}`
-    ).toString('base64');
+    const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${timestamp}`).toString('base64');
+
+    console.log('🔑 Token received, initiating STK...'); // DEBUG
 
     const { data } = await axios.post(
       `${BASE_URL}/mpesa/stkpush/v1/processrequest`,
@@ -132,22 +139,24 @@ paymentRouter.post('/mpesa/pay', authToken, async (req, res) => {
         Password: password,
         Timestamp: timestamp,
         TransactionType: 'CustomerPayBillOnline',
-        Amount: amount,
+        Amount: book.price,
         PartyA: phone,
         PartyB: MPESA_SHORTCODE,
         PhoneNumber: phone,
-        CallBackURL: CALLBACK_URL,
-        AccountReference: `Book-${book._id}`,
-        TransactionDesc: `Purchase ${book.title}`
+        CallBackURL: CALLBACK_URL,  // Make sure this is HTTPS
+        AccountReference: `Book-${book._id.toString().slice(-6)}`,
+        TransactionDesc: `Purchase ${book.title.slice(0, 20)}`
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
+
+    console.log('✅ STK Response:', data); // DEBUG
 
     await Payment.create({
       user: user._id,
       book: book._id,
       phone,
-      amount,
+      amount: book.price,
       status: 'pending',
       transaction: data.CheckoutRequestID
     });
@@ -155,11 +164,23 @@ paymentRouter.post('/mpesa/pay', authToken, async (req, res) => {
     res.json({
       success: true,
       message: 'STK Push sent. Enter M-Pesa PIN.',
-      transaction_id: data.CheckoutRequestID
+      checkoutRequestId: data.CheckoutRequestID
     });
+
   } catch (err) {
-    console.error('[STK ERROR]', err.response?.data || err.message);
-    res.status(500).json({ success: false, message: 'STK Push failed' });
+    // DETAILED ERROR LOGGING
+    console.error('❌ [STK ERROR FULL]:', {
+      message: err.message,
+      response: err.response?.data,
+      status: err.response?.status,
+      stack: err.stack
+    });
+    
+    res.status(500).json({ 
+      success: false, 
+      message: err.response?.data?.errorMessage || 'STK Push failed',
+      debug: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 });
 
@@ -247,4 +268,6 @@ paymentRouter.get("/all-payments", authToken, isAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch payments", error: err.message });
   }
 });
+
+
 export default paymentRouter;
