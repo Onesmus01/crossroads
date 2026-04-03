@@ -2,14 +2,14 @@
 
 import React, { useState, useContext } from 'react'
 import Image from 'next/image'
-import user from '@/public/images/user.png' // Next.js expects /public folder
+import user from '@/public/images/user.png'
 import { FcGoogle } from 'react-icons/fc'
 import { FaFacebookF } from 'react-icons/fa'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 import Link from 'next/link'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
-import {Context} from "@/context/userContext.js";
+import { Context } from "@/context/userContext.js";
 
 let backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/api"
 
@@ -22,6 +22,10 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
 
   const router = useRouter()
+  
+  // ✅ FIX: Get fetchUserDetails from context
+  const { fetchUserDetails } = useContext(Context)
+
   const handleOnChange = (e) => {
     const { name, value } = e.target;
     setData((prev) => ({
@@ -56,16 +60,18 @@ const Login = () => {
       if (responseData.token) {
         localStorage.setItem("token", responseData.token);
         console.log("✅ Token saved to localStorage");
+        
+        // ✅ FIX: Fetch user details immediately after login
+        await fetchUserDetails();
+        
+        toast.success(responseData.message || "Login successful!");
+        router.push("/");
       } else {
         console.warn("⚠️ No token received from backend");
         toast.error("Authentication error: No token received");
         return;
       }
 
-      toast.success(responseData.message || "Login successful!");
-
-      
-      router.push("/"); // Next.js navigation
     } catch (error) {
       console.error("Login error:", error);
       toast.error(error.message || "Something went wrong!");
