@@ -130,7 +130,6 @@ export const updateBook = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
 // ---------------- Delete a book ----------------
 export const deleteBook = async (req, res) => {
   const { id } = req.params;

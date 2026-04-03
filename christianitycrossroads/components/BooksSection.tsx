@@ -92,8 +92,8 @@ export function BooksSection({
         return {
           id: b._id || b.id || String(index),
           title: b.title || 'Untitled',
-          author: b.author || 'Unknown',
           genre: b.genre || 'General',
+          author: b.author || 'Unknown Author',
           rating: Number(b.rating) || (Math.random() * 1.5 + 3.5),
           price,
           originalPrice: originalPrice > price ? originalPrice : undefined,
@@ -110,6 +110,8 @@ export function BooksSection({
       else if (filter === 'premium') filtered = formattedBooks.filter(b => b.price > 0);
 
       setBooks(filtered);
+      console.log("API BOOKS:", data.books);
+      
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message);

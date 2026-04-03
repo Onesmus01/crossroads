@@ -11,6 +11,7 @@ export default function AddBookPage() {
     title: "",
     description: "",
     price: "",
+    author: ""
   });
 
   const [pdfFile, setPdfFile] = useState(null);
@@ -36,6 +37,7 @@ export default function AddBookPage() {
       data.append("title", formData.title);
       data.append("description", formData.description);
       data.append("price", formData.price);
+      data.append("author", formData.author); 
       data.append("pdf", pdfFile);
       if (coverFile) data.append("cover", coverFile);
 
