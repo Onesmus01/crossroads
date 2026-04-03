@@ -47,7 +47,7 @@ router.post(
 
 // Update book (optional new files)
 router.put(
-  "/:id",
+  "/update/:id",
   authToken,
   isAdmin,
   upload.fields([

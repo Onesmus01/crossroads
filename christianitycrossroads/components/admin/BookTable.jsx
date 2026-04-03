@@ -1,6 +1,14 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 export default function BookTable({ books, onDelete }) {
+  const router = useRouter();
+
+  const handleEdit = (bookId) => {
+    router.push(`/admin/book/updateBook?id=${bookId}`);
+  };
+
   return (
     <table className="w-full table-auto border border-gray-300 rounded-md">
       <thead className="bg-gray-200">
@@ -14,7 +22,6 @@ export default function BookTable({ books, onDelete }) {
       <tbody>
         {books.map((book) => (
           <tr key={book._id} className="hover:bg-gray-100">
-            
             {/* ✅ Real Image Here */}
             <td className="px-4 py-2 border">
               {book.coverImage ? (
@@ -32,7 +39,10 @@ export default function BookTable({ books, onDelete }) {
             <td className="px-4 py-2 border">${book.price}</td>
 
             <td className="px-4 py-2 border flex gap-2">
-              <button className="bg-blue-600 text-white px-2 py-1 rounded">
+              <button
+                onClick={() => handleEdit(book._id)}
+                className="bg-blue-600 text-white px-2 py-1 rounded"
+              >
                 Edit
               </button>
               <button

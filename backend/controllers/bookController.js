@@ -30,7 +30,7 @@ export const uploadToCloudinaryStream = (buffer, folder, resource_type = "auto")
 };
 export const addBook = async (req, res) => {
   try {
-    const { title, description, price } = req.body;
+    const { title, description, price,author } = req.body;
 
     if (!title || !description || !price) {
       return res.status(400).json({ message: "Title, description, and price are required" });
@@ -59,7 +59,7 @@ export const addBook = async (req, res) => {
     // ✅ Save to MongoDB
     const newBook = await Book.create({
       title,
-      author: "Unknown Author", // Placeholder, can be extended to accept author field
+      author: author || "Unknown Author", // Placeholder, can be extended to accept author field
       description,
       price: numericPrice,
       fileUrl: pdfUrl,
