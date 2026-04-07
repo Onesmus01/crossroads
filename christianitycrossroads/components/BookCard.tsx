@@ -67,14 +67,12 @@ export function BookCard({
     }
   };
 
-  const discountPercent = discount || (originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0);
-
   return (
     <motion.div
       onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative bg-white dark:bg-zinc-900  overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-zinc-200 dark:border-zinc-800 cursor-pointer h-full flex flex-col"
+      className="group relative bg-white dark:bg-zinc-900 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-zinc-200 dark:border-zinc-800 cursor-pointer h-full flex flex-col"
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
     >
@@ -90,40 +88,36 @@ export function BookCard({
             />
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
+                <div className="w-6 h-6 sm:w-8 sm:h-8 border-2 border-zinc-300 border-t-zinc-600 rounded-full animate-spin" />
               </div>
             )}
           </>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-200 to-zinc-300 dark:from-zinc-800 dark:to-zinc-700">
-            <span className="text-4xl font-bold text-zinc-400 dark:text-zinc-600">{title.charAt(0)}</span>
+            <span className="text-2xl sm:text-4xl font-bold text-zinc-400 dark:text-zinc-600">{title.charAt(0)}</span>
           </div>
         )}
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60" />
 
-        {/* Badges - Top Left */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+        {/* Badges - Top Left - Discount removed */}
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-1.5">
           {isNew && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full shadow-sm">
-              <Sparkles className="w-3 h-3" />
+            <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-sm">
+              <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               NEW
             </span>
           )}
           {isBestseller && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500 text-white text-[10px] font-bold rounded-full shadow-sm">
-              <TrendingUp className="w-3 h-3" />
-              BESTSELLER
-            </span>
-          )}
-          {discountPercent > 0 && !isFree && (
-            <span className="px-2 py-1 bg-rose-500 text-white text-[10px] font-bold rounded-full shadow-sm">
-              -{discountPercent}%
+            <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-amber-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-sm">
+              <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span className="hidden sm:inline">HOT</span>
+              <span className="sm:hidden">HOT</span>
             </span>
           )}
           {isFree && !isOwned && (
-            <span className="px-2 py-1 bg-blue-500 text-white text-[10px] font-bold rounded-full shadow-sm">
+            <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-sm">
               FREE
             </span>
           )}
@@ -132,54 +126,44 @@ export function BookCard({
         {/* Wishlist Button - Top Right */}
         <button
           onClick={handleLike}
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur shadow-sm hover:scale-110 transition-transform"
+          className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur shadow-sm hover:scale-110 transition-transform"
         >
-          <Heart className={`w-4 h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-zinc-600 dark:text-zinc-400'}`} />
+          <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isLiked ? 'fill-rose-500 text-rose-500' : 'text-zinc-600 dark:text-zinc-400'}`} />
         </button>
 
         {/* Rating - Bottom Left */}
-        <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-          <span className="text-white text-xs font-bold">{rating.toFixed(1)}</span>
+        <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 flex items-center gap-0.5 sm:gap-1 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
+          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400 text-amber-400" />
+          <span className="text-white text-[10px] sm:text-xs font-bold">{rating.toFixed(1)}</span>
         </div>
       </div>
 
-      {/* Content - Consistent padding */}
-      <div className="p-4 flex flex-col flex-1">
+      {/* Content */}
+      <div className="p-3 sm:p-4 flex flex-col flex-1">
         {/* Genre Tag */}
-        <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-2 uppercase tracking-wider">
+        <span className="text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 sm:mb-2 uppercase tracking-wider">
           {genre}
         </span>
 
         {/* Title */}
-        <h3 className="font-bold text-base text-zinc-900 dark:text-zinc-100 mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+        <h3 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 mb-0.5 sm:mb-1 line-clamp-1 group-hover:text-primary transition-colors">
           {title}
         </h3>
 
         {/* Author */}
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
+        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4">
           by {author}
         </p>
 
-        {/* Footer - Price & Action */}
-        <div className="mt-auto pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
+        {/* Footer - Price & Action - Single line, no original price */}
+        <div className="mt-auto pt-2 sm:pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
           <div className="flex flex-col">
             {isOwned ? (
-              <span className="text-sm font-bold text-emerald-600">Owned</span>
+              <span className="text-xs sm:text-sm font-bold text-emerald-600">Owned</span>
             ) : (
-              <>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-lg font-bold text-zinc-900 dark:text-white">
-                    {isFree ? 'Free' : `KES ${price}`}
-                  </span>
-                  {originalPrice && !isFree && (
-                    <span className="text-xs text-zinc-400 line-through">
-                      KES {originalPrice}
-                    </span>
-                  )}
-                </div>
-                {isFree && <span className="text-xs text-emerald-600 font-medium">Instant access</span>}
-              </>
+              <span className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-white">
+                {isFree ? 'Free' : `KES ${price}`}
+              </span>
             )}
           </div>
 
@@ -188,7 +172,7 @@ export function BookCard({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleAction}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-xs font-semibold transition-colors ${
               isOwned 
                 ? 'bg-emerald-500 hover:bg-emerald-600 text-white' 
                 : isFree 
@@ -197,11 +181,11 @@ export function BookCard({
             }`}
           >
             {isOwned ? (
-              <><Play className="w-3.5 h-3.5 fill-current" /> Read</>
+              <><Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" /> <span className="hidden sm:inline">Read</span><span className="sm:hidden">Read</span></>
             ) : isFree ? (
-              <><Download className="w-3.5 h-3.5" /> Get</>
+              <><Download className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Get</span><span className="sm:hidden">Get</span></>
             ) : (
-              <><Lock className="w-3.5 h-3.5" /> Unlock</>
+              <><Lock className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> <span className="hidden sm:inline">Unlock</span><span className="sm:hidden">Buy</span></>
             )}
           </motion.button>
         </div>

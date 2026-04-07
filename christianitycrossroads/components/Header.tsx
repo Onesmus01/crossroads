@@ -21,7 +21,7 @@ export function Header() {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Prevent zoom on iOS when focusing inputs (if any are added later)
+  // Prevent zoom on iOS when focusing inputs
   useEffect(() => {
     const preventZoom = (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
@@ -51,7 +51,6 @@ export function Header() {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
-      // Prevent zoom on body when menu is open
       document.body.style.touchAction = 'pan-y'
     } else {
       document.body.style.overflow = 'unset'
@@ -142,17 +141,17 @@ export function Header() {
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled ? 'bg-background/95 backdrop-blur-md shadow-lg border-b border-border' : 'bg-background border-b border-transparent'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             
-            {/* Logo Section */}
+            {/* Logo Section - Smaller on mobile */}
             <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
-              <Link href="/" className="flex items-center gap-2 md:gap-3 group">
-                <div className="w-9 h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 touch-manipulation">
-                  <span className="font-bold text-primary-foreground text-lg md:text-xl">✨</span>
+              <Link href="/" className="flex items-center gap-1.5 sm:gap-2 md:gap-3 group">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 lg:w-12 lg:h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300 group-hover:scale-105 touch-manipulation">
+                  <span className="font-bold text-primary-foreground text-base sm:text-lg md:text-xl">✨</span>
                 </div>
                 <div className="hidden sm:block">
-                  <h1 className="text-lg md:text-xl lg:text-2xl font-bold leading-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                  <h1 className="text-base md:text-xl lg:text-2xl font-bold leading-tight bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                     Christianity Crossroads
                   </h1>
                   <p className="text-[10px] md:text-xs text-muted-foreground hidden md:block">
@@ -259,7 +258,7 @@ export function Header() {
             </div>
 
             {/* Mobile Right Section */}
-            <div className="flex items-center gap-2 md:hidden">
+            <div className="flex items-center gap-1.5 sm:gap-2 md:hidden">
               <ThemeToggle />
               <button 
                 onClick={() => setIsOpen(true)}
@@ -267,7 +266,7 @@ export function Header() {
                 aria-label="Open menu"
                 style={{ touchAction: 'manipulation' }}
               >
-                <Menu size={24} className="text-foreground" />
+                <Menu size={22} className="text-foreground" />
               </button>
             </div>
           </div>
@@ -283,33 +282,35 @@ export function Header() {
         
         <div 
           ref={mobileMenuRef}
-          className={`absolute top-0 right-0 h-full w-[85vw] max-w-[320px] bg-background shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+          className={`absolute top-0 right-0 h-full w-[80vw] max-w-[280px] bg-background shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
         >
-          <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
-            <span className="font-bold text-lg">Menu</span>
+          {/* Compact Header */}
+          <div className="flex items-center justify-between p-3 border-b border-border bg-muted/30">
+            <span className="font-bold text-base">Menu</span>
             <button 
               onClick={() => setIsOpen(false)}
-              className="p-2 rounded-full hover:bg-accent transition-colors touch-manipulation"
+              className="p-1.5 rounded-full hover:bg-accent transition-colors touch-manipulation"
               aria-label="Close menu"
               style={{ touchAction: 'manipulation' }}
             >
-              <X size={24} className="text-foreground" />
+              <X size={20} className="text-foreground" />
             </button>
           </div>
 
-          <div className="flex flex-col h-[calc(100vh-65px)]">
-            <div className="flex-1 overflow-y-auto p-4 space-y-6 overscroll-contain">
+          {/* Scrollable Content */}
+          <div className="flex flex-col h-[calc(100vh-57px)]">
+            <div className="flex-1 overflow-y-auto p-3 space-y-4 overscroll-contain">
               
               {user ? (
-                <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl p-4 border border-border shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-full text-white font-bold text-xl shadow-lg ${getAvatarColor(firstLetter)}`}>
+                <div className="bg-gradient-to-br from-muted to-muted/50 rounded-xl p-3 border border-border shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full text-white font-bold text-base shadow-md ${getAvatarColor(firstLetter)}`}>
                       {firstLetter}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-lg truncate">{user.name}</p>
-                      <p className="text-sm text-muted-foreground truncate">{user.email}</p>
-                      <span className={`inline-block mt-1 px-2 py-0.5 text-xs font-semibold rounded-full ${
+                      <p className="font-bold text-sm truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <span className={`inline-block mt-0.5 px-1.5 py-0.5 text-[10px] font-semibold rounded-full ${
                         isAdmin ? 'bg-red-100 text-red-700 dark:bg-red-900/30' : 'bg-primary/10 text-primary'
                       }`}>
                         {user.role}
@@ -318,26 +319,27 @@ export function Header() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-br from-muted to-muted/50 rounded-2xl p-6 text-center border border-border">
-                  <p className="text-muted-foreground mb-3 text-base">Welcome Guest</p>
+                <div className="bg-gradient-to-br from-muted to-muted/50 rounded-xl p-4 text-center border border-border">
+                  <p className="text-muted-foreground mb-2 text-sm">Welcome Guest</p>
                   <Link 
                     href="/login" 
                     onClick={() => setIsOpen(false)}
-                    className="inline-block w-full px-6 py-3 bg-primary text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity text-base touch-manipulation"
+                    className="inline-block w-full px-4 py-2.5 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity text-sm touch-manipulation"
                   >
                     Login to Continue
                   </Link>
                 </div>
               )}
 
-              <nav className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">Menu</p>
+              {/* Compact Navigation */}
+              <nav className="space-y-0.5">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 px-2">Menu</p>
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-base font-medium transition-all touch-manipulation min-h-[48px] ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all touch-manipulation min-h-[40px] ${
                       pathname === link.href 
                         ? 'bg-primary/10 text-primary' 
                         : 'text-foreground hover:bg-accent'
@@ -350,64 +352,65 @@ export function Header() {
               </nav>
 
               {user && (
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">Account</p>
+                <div className="space-y-0.5">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 px-2">Account</p>
                   
                   {isAdmin && (
                     <Link 
                       href="/admin/dashboard" 
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-base font-medium text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors touch-manipulation min-h-[48px]"
+                      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors touch-manipulation min-h-[40px]"
                     >
-                      <span className="w-2 h-2 rounded-full bg-red-500" />
-                      Admin Dashboard
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                      Admin
                     </Link>
                   )}
                   
                   <Link 
                     href="/manageProfile" 
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-base text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[48px]"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[40px]"
                   >
-                    <User className="w-5 h-5 text-muted-foreground" />
-                    Manage Profile
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    Profile
                   </Link>
                   <Link 
                     href="/wishlist" 
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-base text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[48px]"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[40px]"
                   >
-                    <Heart className="w-5 h-5 text-muted-foreground" />
-                    My Wishlist
+                    <Heart className="w-4 h-4 text-muted-foreground" />
+                    Wishlist
                   </Link>
                   <Link 
                     href="/orders" 
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-base text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[48px]"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[40px]"
                   >
-                    <ShoppingBag className="w-5 h-5 text-muted-foreground" />
-                    My Orders
+                    <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+                    Orders
                   </Link>
                   <Link 
                     href="/settings" 
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3.5 rounded-xl text-base text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[48px]"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-foreground hover:bg-accent transition-colors touch-manipulation min-h-[40px]"
                   >
-                    <Settings className="w-5 h-5 text-muted-foreground" />
+                    <Settings className="w-4 h-4 text-muted-foreground" />
                     Settings
                   </Link>
                 </div>
               )}
             </div>
 
+            {/* Compact Logout Button - Fixed at bottom */}
             {user && (
-              <div className="p-4 border-t border-border bg-background">
+              <div className="p-3 border-t border-border bg-background">
                 <button
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-3 w-full px-4 py-4 rounded-xl text-base font-bold text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors shadow-sm touch-manipulation"
-                  style={{ touchAction: 'manipulation', minHeight: '48px' }}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-bold text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors shadow-sm touch-manipulation"
+                  style={{ touchAction: 'manipulation', minHeight: '40px' }}
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className="w-4 h-4" />
                   Logout
                 </button>
               </div>

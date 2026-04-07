@@ -21,6 +21,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+
 export const metadata: Metadata = {
   title: 'Bookshelf - Your Personal Library',
   description: 'Store, organize, and access your favorite books in one beautiful place.',

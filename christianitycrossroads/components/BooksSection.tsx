@@ -166,28 +166,28 @@ export function BooksSection({
   // Loading Skeleton
   if (loading) {
     return (
-      <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
+      <section className="py-10 sm:py-16 lg:py-24 relative overflow-hidden">
         {/* Background decoration */}
         <div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-background to-background pointer-events-none" />
         
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative">
           {/* Header Skeleton */}
-          <div className="mb-12 space-y-4">
-            <div className="h-8 w-32 bg-muted rounded-full animate-pulse" />
-            <div className="h-12 w-3/4 max-w-lg bg-muted rounded-xl animate-pulse" />
-            <div className="h-6 w-1/2 max-w-md bg-muted rounded-lg animate-pulse" />
+          <div className="mb-8 sm:mb-12 space-y-3 sm:space-y-4">
+            <div className="h-6 sm:h-8 w-24 sm:w-32 bg-muted rounded-full animate-pulse" />
+            <div className="h-8 sm:h-12 w-3/4 max-w-lg bg-muted rounded-xl animate-pulse" />
+            <div className="h-4 sm:h-6 w-1/2 max-w-md bg-muted rounded-lg animate-pulse" />
           </div>
 
-          {/* Grid Skeleton */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+          {/* Grid Skeleton - tighter on mobile */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="space-y-3">
-                <div className="aspect-[2/3] bg-muted rounded-2xl animate-pulse" />
-                <div className="h-4 bg-muted rounded-lg w-3/4 animate-pulse" />
-                <div className="h-3 bg-muted rounded-lg w-1/2 animate-pulse" />
-                <div className="flex justify-between items-center pt-2">
-                  <div className="h-6 bg-muted rounded-lg w-20 animate-pulse" />
-                  <div className="h-8 bg-muted rounded-lg w-16 animate-pulse" />
+              <div key={i} className="space-y-2 sm:space-y-3">
+                <div className="aspect-[2/3] bg-muted rounded-xl sm:rounded-2xl animate-pulse" />
+                <div className="h-3 sm:h-4 bg-muted rounded-lg w-3/4 animate-pulse" />
+                <div className="h-2.5 sm:h-3 bg-muted rounded-lg w-1/2 animate-pulse" />
+                <div className="flex justify-between items-center pt-1 sm:pt-2">
+                  <div className="h-5 sm:h-6 bg-muted rounded-lg w-16 sm:w-20 animate-pulse" />
+                  <div className="h-7 sm:h-8 bg-muted rounded-lg w-12 sm:w-16 animate-pulse" />
                 </div>
               </div>
             ))}
@@ -200,23 +200,23 @@ export function BooksSection({
   // Error State
   if (error) {
     return (
-      <section className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-24">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-20 px-6 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/10 dark:to-rose-900/10 rounded-3xl border border-red-200 dark:border-red-800/50 shadow-xl shadow-red-500/5"
+            className="text-center py-12 sm:py-20 px-4 sm:px-6 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/10 dark:to-rose-900/10 rounded-2xl sm:rounded-3xl border border-red-200 dark:border-red-800/50 shadow-xl shadow-red-500/5"
           >
-            <div className="w-20 h-20 mx-auto mb-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-              <SearchX className="w-10 h-10 text-red-500" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 sm:mb-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <SearchX className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
             </div>
-            <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-2">Unable to Load Books</h3>
-            <p className="text-red-600 dark:text-red-300 mb-8 max-w-md mx-auto">{error}</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-red-900 dark:text-red-100 mb-2">Unable to Load Books</h3>
+            <p className="text-sm sm:text-base text-red-600 dark:text-red-300 mb-6 sm:mb-8 max-w-md mx-auto px-4">{error}</p>
             <motion.button 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={fetchBooks} 
-              className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold shadow-lg shadow-red-500/30 transition-colors inline-flex items-center gap-2"
+              className="px-6 sm:px-8 py-2.5 sm:py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold shadow-lg shadow-red-500/30 transition-colors inline-flex items-center gap-2 text-sm sm:text-base"
             >
               <Loader2 className="w-4 h-4" />
               Try Again
@@ -230,21 +230,21 @@ export function BooksSection({
   // Empty State
   if (!books.length) {
     return (
-      <section className="py-16 sm:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 sm:py-24">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-24 px-6 bg-gradient-to-br from-muted/50 via-muted/30 to-background rounded-3xl border border-dashed border-muted-foreground/20"
+            className="text-center py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-br from-muted/50 via-muted/30 to-background rounded-2xl sm:rounded-3xl border border-dashed border-muted-foreground/20"
           >
-            <div className="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
-              <BookOpen className="w-12 h-12 text-muted-foreground/50" />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 bg-muted rounded-full flex items-center justify-center">
+              <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground/50" />
             </div>
-            <h3 className="text-2xl font-bold mb-2">No Books Found</h3>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto">We couldn't find any books matching your criteria. Try adjusting your filters or check back later.</p>
+            <h3 className="text-xl sm:text-2xl font-bold mb-2">No Books Found</h3>
+            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8 max-w-md mx-auto px-4">We couldn\\'t find any books matching your criteria. Try adjusting your filters or check back later.</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
+              className="px-5 sm:px-6 py-2.5 sm:py-3 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity text-sm sm:text-base"
             >
               Clear Filters
             </button>
@@ -255,50 +255,50 @@ export function BooksSection({
   }
 
   return (
-    <section className="py-12 sm:py-20 lg:py-28 relative overflow-hidden">
+    <section className="py-10 sm:py-16 lg:py-24 relative overflow-hidden">
       {/* Subtle background gradient */}
       {variantStyle && (
         <div className={`absolute inset-0 bg-gradient-to-b ${variantStyle.gradient} opacity-30 pointer-events-none`} />
       )}
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        {/* Premium Header */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative">
+        {/* Premium Header - Compact on mobile */}
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-10 sm:mb-16"
+          className="mb-6 sm:mb-10 lg:mb-16"
         >
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-            <div className="space-y-4">
-              {/* Badge Row */}
-              <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 sm:gap-6">
+            <div className="space-y-2 sm:space-y-4">
+              {/* Badge Row - Smaller on mobile */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 {variantStyle && (
                   <motion.span 
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${variantStyle.badge} text-white text-sm font-bold shadow-lg`}
+                    className={`inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full ${variantStyle.badge} text-white text-xs sm:text-sm font-bold shadow-lg`}
                   >
-                    <variantStyle.icon className="w-4 h-4" />
-                    {variantStyle.text}
-                    <span className="text-lg">{variantStyle.decoration}</span>
+                    <variantStyle.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">{variantStyle.text}</span>
+                    <span className="sm:hidden">{variantStyle.decoration}</span>
                   </motion.span>
                 )}
                 
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-muted-foreground text-sm font-medium">
-                  <BookOpen className="w-4 h-4" />
+                <span className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full bg-muted text-muted-foreground text-xs sm:text-sm font-medium">
+                  <BookOpen className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   {books.length} {books.length === 1 ? 'Book' : 'Books'}
                 </span>
               </div>
 
-              {/* Title */}
+              {/* Title - Smaller on mobile */}
               <div>
                 <motion.h2 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
+                  className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
                 >
                   {title}
                 </motion.h2>
@@ -307,7 +307,7 @@ export function BooksSection({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="mt-3 text-lg text-muted-foreground max-w-2xl leading-relaxed"
+                    className="mt-2 sm:mt-3 text-sm sm:text-lg text-muted-foreground max-w-2xl leading-relaxed"
                   >
                     {description}
                   </motion.p>
@@ -315,45 +315,45 @@ export function BooksSection({
               </div>
             </div>
 
-            {/* View Toggle - Premium Pill */}
+            {/* View Toggle - Compact on mobile */}
             <motion.div 
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="flex items-center gap-2 bg-muted/80 backdrop-blur-sm rounded-2xl p-1.5 border border-border/50 shadow-sm"
+              className="flex items-center gap-1.5 sm:gap-2 bg-muted/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1 sm:p-1.5 border border-border/50 shadow-sm"
             >
               <button
                 onClick={() => setViewMode('grid')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 ${
                   viewMode === 'grid' 
                     ? 'bg-white dark:bg-zinc-800 shadow-md text-foreground' 
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Grid3X3 className="w-4 h-4" />
+                <Grid3X3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Grid</span>
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 ${
                   viewMode === 'list' 
                     ? 'bg-white dark:bg-zinc-800 shadow-md text-foreground' 
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <LayoutList className="w-4 h-4" />
+                <LayoutList className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">List</span>
               </button>
             </motion.div>
           </div>
         </motion.div>
 
-        {/* Books Grid with Stagger Animation */}
+        {/* Books Grid with Stagger Animation - Tighter gap on mobile */}
         <motion.div 
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className={`grid gap-4 sm:gap-6 ${
+          className={`grid gap-3 sm:gap-6 ${
             viewMode === 'grid' 
               ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
               : 'grid-cols-1 max-w-3xl mx-auto'
@@ -378,17 +378,17 @@ export function BooksSection({
           </AnimatePresence>
         </motion.div>
 
-        {/* Show More Button (if many books) */}
+        {/* Show More Button - Smaller on mobile */}
         {books.length > 10 && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-12 text-center"
+            className="mt-8 sm:mt-12 text-center"
           >
-            <button className="group inline-flex items-center gap-2 px-6 py-3 bg-muted hover:bg-muted/80 rounded-full font-medium transition-colors">
+            <button className="group inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-muted hover:bg-muted/80 rounded-full font-medium transition-colors text-sm sm:text-base">
               View All Books
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </motion.div>
         )}
