@@ -1,0 +1,1 @@
+self.__NEXT_FONT_MANIFEST="{\n  \"app\": {\n    \"[project]/christianitycrossroads/app/page\": [\n      \"static/media/caa3a2e1cccd8315

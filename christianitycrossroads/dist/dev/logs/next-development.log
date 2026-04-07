@@ -1,0 +1,10 @@
+[00:00:04.990] Server  LOG     ⚠ Console Ninja Turbopack support is a PRO feature, currently available to community users while in preview
+[00:00:05.425] Server  LOG     
+[00:00:05.426] Server  LOG       We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+[00:00:05.426] Server  LOG       The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+[00:00:05.427] Server  LOG       	- include was updated to add 'dist/types/**/*.ts'
+[00:00:05.427] Server  LOG       	- include was updated to add 'dist/dev/types/**/*.ts'
+[00:00:05.427] Server  LOG     
+[00:00:06.269] Server  LOG     ✓ Ready in 2.9s
+[00:00:09.527] Server  LOG     ○ Compiling / ...

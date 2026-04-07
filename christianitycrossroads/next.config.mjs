@@ -3,12 +3,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-    output: "export", // ✅ Enable static export
-    images: {
+  distDir: 'dist', // Change output folder name
+  images: {
     unoptimized: true,
   },
-
-
 }
 
 export default nextConfig
