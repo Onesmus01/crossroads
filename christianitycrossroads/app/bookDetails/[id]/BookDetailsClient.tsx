@@ -412,7 +412,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
                 )}
                 
                 {!isPurchased && book.price > 0 && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-md flex flex-col items-center justify-center text-white">
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur- flex flex-col items-center justify-center text-white">
                     <Lock className="w-12 h-12 mb-3 opacity-80" />
                     <p className="text-sm font-medium opacity-80">Purchase to unlock</p>
                   </div>
