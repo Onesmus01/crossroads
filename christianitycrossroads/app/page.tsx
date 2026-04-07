@@ -11,15 +11,13 @@ export default function Home() {
       <main className="flex-1">
     <Hero />
     <div className="-mt-2 sm:-mt-4"> {/* Pulls BooksSection up slightly */}
-    <BooksSection 
-      title="Featured Books" 
-      description="Handpicked for you"
-      variant="featured"
-    />
-  </div>
-</main>
-      
-      <Footer />
-    </div>
+        <BooksSection 
+          title="Featured Books" 
+          description="Handpicked for you"
+          variant="featured"
+        />
+      </div>
+    </main>
+          </div>
   );
 }

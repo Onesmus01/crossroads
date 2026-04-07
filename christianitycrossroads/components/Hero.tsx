@@ -7,7 +7,7 @@ function Hero() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <section className="relative w-full min-h-[55vh] sm:min-h-[60vh] md:min-h-[70vh] overflow-hidden">
+    <section className="relative w-full min-h-[55vh] sm:min-h-[60vh] lg:min-h-screen overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 w-full h-full">
         <Image
@@ -21,9 +21,9 @@ function Hero() {
         <div className="absolute inset-0 bg-black/40 dark:bg-black/50" />
       </div>
 
-      {/* Content - Tight vertical spacing */}
-      <div className="relative h-full min-h-[55vh] sm:min-h-[60vh] md:min-h-[70vh] flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-8 pb-4 sm:pb-6">
-        <div className="max-w-3xl w-full text-center space-y-4 sm:space-y-5 md:space-y-6">
+      {/* Content */}
+      <div className="relative h-full min-h-[55vh] sm:min-h-[60vh] lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-8 pb-4 sm:pb-6 lg:pb-8">
+        <div className="max-w-3xl w-full text-center space-y-4 sm:space-y-5 lg:space-y-6">
           
           {/* Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
@@ -32,7 +32,7 @@ function Hero() {
 
           {/* Heading */}
           <div className="space-y-2 sm:space-y-3">
-            <h1 className="font-display text-3xl sm:text-5xl md:text-6xl font-bold text-white leading-[1.1] sm:leading-tight">
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] sm:leading-tight">
               Christianity{' '}
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">at</span>
               <br className="hidden sm:block" />
@@ -40,7 +40,7 @@ function Hero() {
                 Crossroads
               </span>
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-white/90 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
+            <p className="text-sm sm:text-base lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
               Discover sacred wisdom, spiritual growth, and faith-centered literature.
             </p>
           </div>
