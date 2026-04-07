@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast'
 import { FcGoogle } from 'react-icons/fc'
 import { FaFacebookF } from 'react-icons/fa'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
-import { LogIn, UserPlus, Heart, ArrowLeft, Sparkles } from 'lucide-react'
+import { LogIn, UserPlus, Heart, ArrowLeft, Sparkles, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Context } from "@/context/userContext.js"
 import user from '@/public/images/user.png'
@@ -22,7 +22,7 @@ export default function Login() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [showGuestPopup, setShowGuestPopup] = useState(false)
+  const [showSignupModal, setShowSignupModal] = useState(false)
   const [data, setData] = useState({
     email: "",
     password: "",
@@ -40,7 +40,6 @@ export default function Login() {
         password: signupPassword || ''
       })
       
-      // Clear the flags
       sessionStorage.removeItem('signupEmail')
       sessionStorage.removeItem('signupPassword')
       sessionStorage.removeItem('fromSignup')
@@ -63,7 +62,7 @@ export default function Login() {
   const handleOnChange = (e) => {
     const { name, value } = e.target
     setData((prev) => ({ ...prev, [name]: value }))
-    if (showGuestPopup) setShowGuestPopup(false)
+    if (showSignupModal) setShowSignupModal(false)
   }
 
   const handleSubmit = async (e) => {
@@ -83,11 +82,10 @@ export default function Login() {
 
       const responseData = await res.json()
 
-      // Wrong credentials or account not found
       if (!res.ok) {
-        // Show beloved guest popup for any login failure
-        setShowGuestPopup(true)
-        toast.error("Login failed", { icon: '❌' })
+        // User doesn't exist or wrong credentials - show centered signup modal
+        setShowSignupModal(true)
+        toast.error("Account not found", { icon: '❌' })
         setIsLoading(false)
         return
       }
@@ -98,7 +96,6 @@ export default function Login() {
         
         toast.success("Welcome back! 🎉", { icon: '✅' })
 
-        // Handle redirect after login
         const redirectUrl = sessionStorage.getItem('redirectAfterLogin')
         const returnToPayment = sessionStorage.getItem('returnToPayment')
         
@@ -123,93 +120,127 @@ export default function Login() {
   }
 
   const navigateToSignup = () => {
-    // Preserve redirect if exists
     const redirect = searchParams.get('redirect')
     const query = redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''
     router.push(`/signup${query}`)
   }
 
   const tryDifferentCredentials = () => {
-    setShowGuestPopup(false)
+    setShowSignupModal(false)
     setData({ email: "", password: "" })
   }
 
+  const closeModal = () => {
+    setShowSignupModal(false)
+  }
+
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-indigo-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 px-4 py-8">
-      <div className="w-full max-w-md">
-        
-        {/* Beloved Guest Popup */}
-        <AnimatePresence>
-          {showGuestPopup && (
-            <motion.div
-              initial={{ opacity: 0, y: -30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="mb-6 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/10 border-2 border-rose-200 dark:border-rose-800 rounded-3xl p-6 shadow-lg relative overflow-hidden"
-            >
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-indigo-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 px-4 py-8 relative">
+      
+      {/* BACKDROP OVERLAY - Darkens the login page when modal shows */}
+      <AnimatePresence>
+        {showSignupModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            onClick={closeModal}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* CENTERED SIGNUP MODAL - Pops up in the middle of screen */}
+      <AnimatePresence>
+        {showSignupModal && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none"
+          >
+            <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-zinc-800 dark:to-zinc-900 border-2 border-rose-200 dark:border-rose-800 rounded-3xl p-8 shadow-2xl max-w-md w-full pointer-events-auto relative">
+              
+              {/* Close button */}
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 p-2 text-rose-400 hover:text-rose-600 dark:text-rose-500 dark:hover:text-rose-300 transition-colors rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/30"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
               {/* Decorative sparkle */}
-              <div className="absolute top-3 right-3 text-rose-300 dark:text-rose-700">
-                <Sparkles className="w-5 h-5" />
+              <div className="absolute top-4 left-4 text-rose-300 dark:text-rose-600">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div className="absolute top-4 right-12 text-rose-300 dark:text-rose-600">
+                <Sparkles className="w-4 h-4" />
               </div>
               
-              <div className="text-center space-y-4">
+              <div className="text-center space-y-5">
                 <motion.div 
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: "spring" }}
-                  className="w-16 h-16 bg-rose-100 dark:bg-rose-800/30 rounded-full flex items-center justify-center mx-auto"
+                  className="w-20 h-20 bg-rose-100 dark:bg-rose-800/30 rounded-full flex items-center justify-center mx-auto"
                 >
-                  <Heart className="w-8 h-8 text-rose-500 fill-rose-500" />
+                  <Heart className="w-10 h-10 text-rose-500 fill-rose-500" />
                 </motion.div>
                 
                 <div>
-                  <h3 className="text-lg font-bold text-rose-800 dark:text-rose-200">
-                    Dear Our Beloved Guest 💝
+                  <h3 className="text-2xl font-bold text-rose-800 dark:text-rose-200">
+                    Welcome, Beloved Guest! 💝
                   </h3>
-                  <p className="text-rose-700 dark:text-rose-300 mt-2 text-sm leading-relaxed">
-                    It seems that you don't have an account with us yet, 
-                    or your credentials may be incorrect. Please create an account 
-                    to enjoy our sacred collection!
+                  <p className="text-rose-700 dark:text-rose-300 mt-3 text-base leading-relaxed">
+                    We couldn't find an account with that email. 
+                    Create one now to access our sacred collection of books!
                   </p>
                 </div>
 
-                <div className="flex flex-col gap-3 pt-2">
+                <div className="flex flex-col gap-3 pt-4">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={navigateToSignup}
-                    className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-rose-200 dark:shadow-none flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-xl shadow-lg shadow-rose-200 dark:shadow-none flex items-center justify-center gap-2 text-lg"
                   >
                     <UserPlus className="w-5 h-5" />
-                    Create Account
+                    Create Account Now
                   </motion.button>
                   
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={tryDifferentCredentials}
-                    className="py-2.5 text-rose-600 dark:text-rose-400 font-medium text-sm hover:bg-rose-100 dark:hover:bg-rose-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    className="py-3 text-rose-600 dark:text-rose-400 font-medium text-sm hover:bg-rose-100 dark:hover:bg-rose-900/20 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Try Different Credentials
+                    Try Different Email
                   </motion.button>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Main Login Card - Dims when modal is open */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ 
+          opacity: showSignupModal ? 0.3 : 1, 
+          y: 0,
+          scale: showSignupModal ? 0.95 : 1
+        }}
+        transition={{ duration: 0.3 }}
+        className={`w-full max-w-md ${showSignupModal ? 'pointer-events-none' : ''}`}
+      >
         {/* Main Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden"
-        >
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden">
           {/* Header Section */}
           <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-indigo-500 p-8 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />            
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')] opacity-50" />            
             <motion.div 
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -357,7 +388,7 @@ export default function Login() {
               </p>
             </form>
           </div>
-        </motion.div>
+        </div>
 
         {/* Back to Home */}
         <div className="mt-6 text-center">
@@ -369,7 +400,7 @@ export default function Login() {
             Back to home
           </Link>
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }

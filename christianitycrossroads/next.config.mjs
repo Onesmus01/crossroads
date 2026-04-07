@@ -4,6 +4,10 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
     output: "export", // ✅ Enable static export
+    images: {
+    unoptimized: true,
+  },
+
 
 }
 

@@ -80,7 +80,7 @@ export default function UpdateBookPage() {
 
       if (res.ok) {
         alert("Book updated successfully!");
-        router.push("/admin/books"); // redirect to books list
+        router.push("/admin/book"); // redirect to books list
       } else {
         alert(result.message || "Failed to update book");
       }

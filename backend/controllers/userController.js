@@ -133,36 +133,69 @@ export const getAllUsers = async(req,res)=> {
     }
 }
 
-export const updateUser = async(req,res)=> {
+
+export const updateUser = async (req, res) => {
     try {
-        const {userId,name,email,role} = req.body
-        const payload = {
-            ...(email && {email: email}),
-            ...(name && {name: name}),
-            ...(role && {role: role})
+        // Get userId from authToken middleware (not from body)
+        // authToken should attach user to req, typically as req.user.id or req.userId
+        const userId = req.user?.id || req.user?._id || req.userId;
+        
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: "User not authenticated"
+            });
         }
 
-        const updatedUser = await User.findByIdAndUpdate(userId,payload,{new:true}).select("-password")
-            if (!updatedUser) {
-            return res.status(404).json({
-            success: false,
-            message: "User not found",
-        });
+        const { name, password } = req.body;
+        
+        // Build update payload
+        const payload = {};
+        
+        if (name && name.trim() !== '') {
+            payload.name = name.trim();
         }
-          return res.status(200).json({
-          success: true,
-          message: "User updated successfully",
-          data: updatedUser
-    });
-    
+        
+        // Handle password update with hashing
+        if (password && password.trim() !== '') {
+            const salt = await bcrypt.genSalt(10);
+            payload.password = await bcrypt.hash(password, salt);
+        }
+
+        // If nothing to update
+        if (Object.keys(payload).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No fields to update"
+            });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId, 
+            payload, 
+            { new: true }
+        ).select("-password");
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "User updated successfully",
+            user: updatedUser  // Changed from 'data' to 'user' to match frontend expectation
+        });
 
     } catch (error) {
-         return res.status(500).json({
-         success: false,
-         message: "Server error"
-    });
-  }
-    
-}
+        console.error("Update user error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Server error"
+        });
+    }
+};
 
 
