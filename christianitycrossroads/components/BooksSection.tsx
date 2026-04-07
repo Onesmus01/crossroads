@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BookCard } from './BookCard';
 import { toast } from 'react-hot-toast';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Loader2, 
   BookOpen, 
@@ -11,6 +11,9 @@ import {
   TrendingUp,
   Library,
   SearchX,
+  Grid3X3,
+  LayoutList,
+  ChevronRight,
   Filter
 } from 'lucide-react';
 
@@ -39,18 +42,29 @@ interface BooksSectionProps {
   layout?: 'grid' | 'list';
 }
 
-const getBookColor = (index: number) => {
-  const gradients = [
-    'from-rose-400 via-pink-500 to-orange-400',
-    'from-violet-400 via-purple-500 to-indigo-400',
-    'from-emerald-400 via-teal-500 to-cyan-400',
-    'from-amber-400 via-yellow-500 to-orange-400',
-    'from-cyan-400 via-blue-500 to-indigo-400',
-    'from-fuchsia-400 via-pink-500 to-rose-400',
-    'from-lime-400 via-green-500 to-emerald-400',
-    'from-sky-400 via-blue-500 to-indigo-400',
-  ];
-  return gradients[index % gradients.length];
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+      damping: 12,
+    },
+  },
 };
 
 export function BooksSection({ 
@@ -98,7 +112,7 @@ export function BooksSection({
           price,
           originalPrice: originalPrice > price ? originalPrice : undefined,
           discount: discount > 0 ? discount : undefined,
-          color: getBookColor(index),
+          color: `from-${['rose', 'violet', 'emerald', 'amber', 'cyan', 'fuchsia'][index % 6]}-400`,
           coverImage: b.coverImage || b.image || '',
           isNew: index < 3 || b.isNew,
           isBestseller: b.rating >= 4.5 || b.isBestseller,
@@ -110,7 +124,6 @@ export function BooksSection({
       else if (filter === 'premium') filtered = formattedBooks.filter(b => b.price > 0);
 
       setBooks(filtered);
-      console.log("API BOOKS:", data.books);
       
     } catch (err: any) {
       setError(err.message);
@@ -120,149 +133,265 @@ export function BooksSection({
     }
   };
 
-  const getVariantBadge = () => {
-    const badges = {
-      bestsellers: { icon: TrendingUp, color: 'from-amber-400 to-orange-500', text: 'Trending' },
-      'new-arrivals': { icon: Sparkles, color: 'from-emerald-400 to-teal-500', text: 'New' },
-      featured: { icon: Library, color: 'from-violet-400 to-purple-500', text: 'Featured' },
+  const getVariantStyles = () => {
+    const styles = {
+      bestsellers: {
+        icon: TrendingUp,
+        gradient: 'from-amber-500/20 via-orange-500/20 to-red-500/20',
+        badge: 'bg-gradient-to-r from-amber-500 to-orange-500',
+        text: 'Trending Now',
+        decoration: '🔥'
+      },
+      'new-arrivals': {
+        icon: Sparkles,
+        gradient: 'from-emerald-500/20 via-teal-500/20 to-cyan-500/20',
+        badge: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+        text: 'Fresh Arrivals',
+        decoration: '✨'
+      },
+      featured: {
+        icon: Library,
+        gradient: 'from-violet-500/20 via-purple-500/20 to-fuchsia-500/20',
+        badge: 'bg-gradient-to-r from-violet-500 to-purple-500',
+        text: 'Editor\'s Pick',
+        decoration: '⭐'
+      },
+      default: null
     };
-    
-    if (variant === 'default') return null;
-    const badge = badges[variant];
-    if (!badge) return null;
-    const Icon = badge.icon;
-    
-    return (
-      <span className={`inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r ${badge.color} text-white text-xs sm:text-sm font-bold shadow-lg`}>
-        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-        <span className="hidden xs:inline">{badge.text}</span>
-      </span>
-    );
+    return styles[variant];
   };
 
+  const variantStyle = getVariantStyles();
+
+  // Loading Skeleton
   if (loading) {
     return (
-      <section className="py-12 sm:py-20 lg:py-28">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-primary/20 border-t-primary rounded-full"
-            />
-            <p className="text-muted-foreground text-sm sm:text-base">Loading library...</p>
+      <section className="py-16 sm:py-24 lg:py-32 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/50 via-background to-background pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* Header Skeleton */}
+          <div className="mb-12 space-y-4">
+            <div className="h-8 w-32 bg-muted rounded-full animate-pulse" />
+            <div className="h-12 w-3/4 max-w-lg bg-muted rounded-xl animate-pulse" />
+            <div className="h-6 w-1/2 max-w-md bg-muted rounded-lg animate-pulse" />
+          </div>
+
+          {/* Grid Skeleton */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="space-y-3">
+                <div className="aspect-[2/3] bg-muted rounded-2xl animate-pulse" />
+                <div className="h-4 bg-muted rounded-lg w-3/4 animate-pulse" />
+                <div className="h-3 bg-muted rounded-lg w-1/2 animate-pulse" />
+                <div className="flex justify-between items-center pt-2">
+                  <div className="h-6 bg-muted rounded-lg w-20 animate-pulse" />
+                  <div className="h-8 bg-muted rounded-lg w-16 animate-pulse" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
     );
   }
 
+  // Error State
   if (error) {
     return (
-      <section className="py-12 sm:py-20">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="text-center py-12 sm:py-16 bg-red-50 dark:bg-red-900/10 rounded-2xl sm:rounded-3xl border border-red-200 dark:border-red-800">
-            <SearchX className="w-10 h-10 sm:w-16 sm:h-16 text-red-400 mx-auto mb-3 sm:mb-4" />
-            <h3 className="text-lg sm:text-xl font-semibold text-red-800 dark:text-red-200 mb-2">Error</h3>
-            <p className="text-red-600 dark:text-red-300 text-sm sm:text-base mb-4 px-4">{error}</p>
-            <button onClick={fetchBooks} className="px-4 sm:px-6 py-2 sm:py-3 bg-red-600 text-white rounded-xl font-medium text-sm">
-              Retry
-            </button>
-          </div>
+      <section className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20 px-6 bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/10 dark:to-rose-900/10 rounded-3xl border border-red-200 dark:border-red-800/50 shadow-xl shadow-red-500/5"
+          >
+            <div className="w-20 h-20 mx-auto mb-6 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+              <SearchX className="w-10 h-10 text-red-500" />
+            </div>
+            <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-2">Unable to Load Books</h3>
+            <p className="text-red-600 dark:text-red-300 mb-8 max-w-md mx-auto">{error}</p>
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={fetchBooks} 
+              className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-semibold shadow-lg shadow-red-500/30 transition-colors inline-flex items-center gap-2"
+            >
+              <Loader2 className="w-4 h-4" />
+              Try Again
+            </motion.button>
+          </motion.div>
         </div>
       </section>
     );
   }
 
+  // Empty State
   if (!books.length) {
     return (
-      <section className="py-12 sm:py-20">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="text-center py-12 sm:py-20 bg-muted/30 rounded-2xl sm:rounded-3xl border border-dashed">
-            <BookOpen className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/50 mx-auto mb-3 sm:mb-4" />
-            <h3 className="text-lg sm:text-2xl font-bold mb-2">No books</h3>
-            <p className="text-muted-foreground text-sm sm:text-base px-4">Try different filters</p>
-          </div>
+      <section className="py-16 sm:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-24 px-6 bg-gradient-to-br from-muted/50 via-muted/30 to-background rounded-3xl border border-dashed border-muted-foreground/20"
+          >
+            <div className="w-24 h-24 mx-auto mb-6 bg-muted rounded-full flex items-center justify-center">
+              <BookOpen className="w-12 h-12 text-muted-foreground/50" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">No Books Found</h3>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">We couldn't find any books matching your criteria. Try adjusting your filters or check back later.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium hover:opacity-90 transition-opacity"
+            >
+              Clear Filters
+            </button>
+          </motion.div>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="py-8 sm:py-12 lg:py-20">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-        {/* Header */}
+    <section className="py-12 sm:py-20 lg:py-28 relative overflow-hidden">
+      {/* Subtle background gradient */}
+      {variantStyle && (
+        <div className={`absolute inset-0 bg-gradient-to-b ${variantStyle.gradient} opacity-30 pointer-events-none`} />
+      )}
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        {/* Premium Header */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 sm:mb-10 lg:mb-16"
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="mb-10 sm:mb-16"
         >
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            {getVariantBadge()}
-            <span className="text-xs sm:text-sm text-muted-foreground">
-              {books.length} book{books.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight mb-2">
-                {title}
-              </h2>
-              {description && (
-                <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl">
-                  {description}
-                </p>
-              )}
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+            <div className="space-y-4">
+              {/* Badge Row */}
+              <div className="flex items-center gap-3 flex-wrap">
+                {variantStyle && (
+                  <motion.span 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${variantStyle.badge} text-white text-sm font-bold shadow-lg`}
+                  >
+                    <variantStyle.icon className="w-4 h-4" />
+                    {variantStyle.text}
+                    <span className="text-lg">{variantStyle.decoration}</span>
+                  </motion.span>
+                )}
+                
+                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted text-muted-foreground text-sm font-medium">
+                  <BookOpen className="w-4 h-4" />
+                  {books.length} {books.length === 1 ? 'Book' : 'Books'}
+                </span>
+              </div>
+
+              {/* Title */}
+              <div>
+                <motion.h2 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text"
+                >
+                  {title}
+                </motion.h2>
+                {description && (
+                  <motion.p 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-3 text-lg text-muted-foreground max-w-2xl leading-relaxed"
+                  >
+                    {description}
+                  </motion.p>
+                )}
+              </div>
             </div>
-            
-            {/* View Toggle - Desktop */}
-            <div className="hidden sm:flex items-center gap-2 bg-muted rounded-xl p-1">
+
+            {/* View Toggle - Premium Pill */}
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center gap-2 bg-muted/80 backdrop-blur-sm rounded-2xl p-1.5 border border-border/50 shadow-sm"
+            >
               <button
                 onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'grid' ? 'bg-white shadow-sm' : 'text-muted-foreground'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                  viewMode === 'grid' 
+                    ? 'bg-white dark:bg-zinc-800 shadow-md text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                Grid
+                <Grid3X3 className="w-4 h-4" />
+                <span className="hidden sm:inline">Grid</span>
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'list' ? 'bg-white shadow-sm' : 'text-muted-foreground'
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                  viewMode === 'list' 
+                    ? 'bg-white dark:bg-zinc-800 shadow-md text-foreground' 
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                List
+                <LayoutList className="w-4 h-4" />
+                <span className="hidden sm:inline">List</span>
               </button>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
-        {/* Grid - Ultra Responsive */}
-        <div className={`
-          grid gap-3 sm:gap-4 lg:gap-6
-          ${viewMode === 'grid' 
-            ? 'grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6' 
-            : 'grid-cols-1'
-          }
-        `}>
-          {books.map((book, index) => (
-            <motion.div
-              key={book.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.4 }}
-              onMouseEnter={() => setHoveredBook(book.id)}
-              onMouseLeave={() => setHoveredBook(null)}
-              className={viewMode === 'list' ? 'w-full' : ''}
-            >
-              <BookCard 
-                {...book} 
-                isHovered={hoveredBook === book.id}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {/* Books Grid with Stagger Animation */}
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className={`grid gap-4 sm:gap-6 ${
+            viewMode === 'grid' 
+              ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
+              : 'grid-cols-1 max-w-3xl mx-auto'
+          }`}
+        >
+          <AnimatePresence mode='popLayout'>
+            {books.map((book, index) => (
+              <motion.div
+                key={book.id}
+                variants={itemVariants}
+                layout
+                onMouseEnter={() => setHoveredBook(book.id)}
+                onMouseLeave={() => setHoveredBook(null)}
+                className={viewMode === 'list' ? 'w-full' : ''}
+              >
+                <BookCard 
+                  {...book} 
+                  isHovered={hoveredBook === book.id}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Show More Button (if many books) */}
+        {books.length > 10 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 text-center"
+          >
+            <button className="group inline-flex items-center gap-2 px-6 py-3 bg-muted hover:bg-muted/80 rounded-full font-medium transition-colors">
+              View All Books
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        )}
       </div>
     </section>
   );
