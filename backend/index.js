@@ -27,7 +27,9 @@ app.use(cookieParser())
 app.use(helmet())
 app.use(cors({
     origin: ["http://localhost:3000","https://christianitycrossroads.onrender.com"],
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }))
 app.use('/api/user',userRouter)
 app.use('/api/payment',paymentRouter)
