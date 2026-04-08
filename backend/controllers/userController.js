@@ -45,6 +45,8 @@ export const signIn = async (req, res) => {
 
     // Set cookie (works if domains match, ignored if cross-domain)
     const isProduction = process.env.NODE_ENV === "production";
+    console.log("EXPRESS SECRET:", JSON.stringify(process.env.JWT_SECRET));
+console.log("EXPRESS SECRET LENGTH:", process.env.JWT_SECRET?.length);
     console.log("Cookie settings:", { isProduction, secure: isProduction, sameSite: isProduction ? "None" : "Lax" });
     res.cookie("token", token, {
       httpOnly: true,
