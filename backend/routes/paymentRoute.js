@@ -11,6 +11,8 @@ import Payment from '../models/paymentModel.js';
 import MpesaLog from '../models/mpesaLog.js';
 import transporter from '../config/nodemailer.js';
 import isAdmin from '../middleware/adminAuth.js';
+import { getAllPayments, getPaymentStats } from "../controllers/paymentController.js";
+
 
 dotenv.config();
 const paymentRouter = express.Router();
@@ -255,7 +257,6 @@ paymentRouter.get('/mpesa/status/:transactionId', authToken, async (req, res) =>
   });
 });
 
-
 paymentRouter.get("/all-payments", authToken, isAdmin, async (req, res) => {
   try {
     const payments = await Payment.find()
@@ -269,5 +270,7 @@ paymentRouter.get("/all-payments", authToken, isAdmin, async (req, res) => {
   }
 });
 
+paymentRouter.get("/all", authToken, isAdmin, getAllPayments);
+paymentRouter.get("/stats", authToken, isAdmin, getPaymentStats);
 
 export default paymentRouter;
