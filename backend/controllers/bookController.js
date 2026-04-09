@@ -106,7 +106,7 @@ export const getBookById = async (req, res) => {
 
 export const updateBook = async (req, res) => {
   const { id } = req.params;
-  const { title, description, price, fileUrl, coverImage } = req.body;
+  const { title, description, price, fileUrl, coverImage,author } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid book ID" });
@@ -122,7 +122,7 @@ export const updateBook = async (req, res) => {
     book.price = price ?? book.price;
     book.fileUrl = fileUrl ?? book.fileUrl;
     book.coverImage = coverImage ?? book.coverImage;
-
+    book.author = author ?? book.author;
     await book.save();
     res.json({ message: "Book updated successfully", book });
   } catch (error) {
