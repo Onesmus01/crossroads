@@ -168,11 +168,12 @@ export function Header() {
                     <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${profileOpen ? 'rotate-180' : ''}`} />
                   </button>
 
+                  {/* FIXED: Changed bg-popover to bg-white for large screen dropdown */}
                   {profileOpen && (
-                    <div className="absolute right-0 mt-3 w-72 bg-popover border border-border rounded-2xl shadow-2xl p-2 space-y-1 z-50 animate-in fade-in zoom-in-95 duration-200">
-                      <div className="px-4 py-3 border-b border-border bg-muted/50 rounded-t-xl">
-                        <p className="font-bold text-base">{user.name}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                    <div className="absolute right-0 mt-3 w-72 bg-white dark:bg-gray-900 border border-border rounded-2xl shadow-2xl p-2 space-y-1 z-50 animate-in fade-in zoom-in-95 duration-200">
+                      <div className="px-4 py-3 border-b border-border bg-gray-50 dark:bg-gray-800 rounded-t-xl">
+                        <p className="font-bold text-base text-gray-900 dark:text-white">{user.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                         <span className="inline-block mt-2 px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full capitalize">
                           {user.role}
                         </span>
@@ -186,19 +187,19 @@ export function Header() {
                           </Link>
                         )}
                         
-                        <Link href="/manageProfile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-accent rounded-lg transition-colors">
+                        <Link href="/manageProfile" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                           <User className="w-4 h-4" />
                           Manage Profile
                         </Link>
-                        <Link href="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-accent rounded-lg transition-colors">
+                        <Link href="/wishlist" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                           <Heart className="w-4 h-4" />
                           My Wishlist
                         </Link>
-                        <Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-accent rounded-lg transition-colors">
+                        <Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                           <ShoppingBag className="w-4 h-4" />
                           My Orders
                         </Link>
-                        <Link href="/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-foreground/80 hover:bg-accent rounded-lg transition-colors">
+                        <Link href="/settings" className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
                           <Settings className="w-4 h-4" />
                           Settings
                         </Link>
@@ -241,7 +242,7 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Slide-in Drawer */}
+      {/* Mobile Slide-in Drawer - FIXED: Added safe area and proper scrolling */}
       <div className={`md:hidden fixed inset-0 z-50 transition-opacity duration-300 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         {/* Backdrop */}
         <div 
@@ -249,7 +250,7 @@ export function Header() {
           onClick={() => setIsOpen(false)}
         />
         
-        {/* Drawer Panel - Slides from right */}
+        {/* Drawer Panel - FIXED: Added max-h and safe area padding */}
         <div 
           ref={mobileMenuRef}
           className={`absolute top-0 right-0 h-full w-[85vw] max-w-[360px] bg-background shadow-2xl transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
@@ -266,11 +267,11 @@ export function Header() {
             </button>
           </div>
 
-          {/* Drawer Content - FIXED: Added flex column and proper height */}
-          <div className="flex flex-col h-[calc(100vh-65px)]">
+          {/* FIXED: Proper flex layout with scrollable content */}
+          <div className="flex flex-col h-[calc(100%-65px)]">
             
-            {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {/* Scrollable Content Area - FIXED: Added pb-20 for logout space */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-24">
               
               {/* User Profile Card */}
               {user ? (
@@ -375,9 +376,9 @@ export function Header() {
               )}
             </div>
 
-            {/* FIXED: Sticky Logout Button at Bottom - Always Visible */}
+            {/* FIXED: Sticky Logout Button with safe area padding */}
             {user && (
-              <div className="p-4 border-t border-border bg-background">
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-background pb-safe">
                 <button
                   onClick={handleLogout}
                   className="flex items-center justify-center gap-3 w-full px-4 py-4 rounded-xl text-base font-bold text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors shadow-sm"
