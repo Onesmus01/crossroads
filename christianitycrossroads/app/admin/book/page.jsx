@@ -36,25 +36,28 @@ export default function BooksPage() {
 
   // Delete a book
   const handleDelete = async (id) => {
-    try {
-      const res = await fetch(`${backendUrl}/book/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+  const confirmDelete = window.confirm("Are you sure you want to delete this book?");
+  
+  if (!confirmDelete) return; // stop if user cancels
 
-      const data = await res.json();
+  try {
+    const res = await fetch(`${backendUrl}/book/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
 
-      if (data.success) {
-        setBooks((prev) => prev.filter((b) => b._id !== id));
-      } else {
-        alert(data.message || "Failed to delete book");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error deleting book");
+    const data = await res.json();
+
+    if (data.success) {
+      setBooks((prev) => prev.filter((b) => b._id !== id));
+    } else {
+      alert(data.message || "Failed to delete book");
     }
-  };
-
+  } catch (err) {
+    console.error(err);
+    alert("Error deleting book");
+  }
+};
   // Update book in the local state after an update
   const handleUpdate = (updatedBook) => {
     setBooks((prevBooks) =>

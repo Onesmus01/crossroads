@@ -106,7 +106,7 @@ export const getBookById = async (req, res) => {
 
 export const updateBook = async (req, res) => {
   const { id } = req.params;
-  const { title, description, price, fileUrl, coverImage,author } = req.body;
+  const { title, description, price, author } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid book ID" });
@@ -116,18 +116,52 @@ export const updateBook = async (req, res) => {
     const book = await Book.findById(id);
     if (!book) return res.status(404).json({ message: "Book not found" });
 
-    // Update fields if provided
-    book.title = title ?? book.title;
-    book.description = description ?? book.description;
-    book.price = price ?? book.price;
-    book.fileUrl = fileUrl ?? book.fileUrl;
-    book.coverImage = coverImage ?? book.coverImage;
-    book.author = author ?? book.author;
+    // Update text fields if provided
+    if (title !== undefined) book.title = title;
+    if (description !== undefined) book.description = description;
+    if (price !== undefined) book.price = Number(price);
+    if (author !== undefined) book.author = author;
+
+    // Handle NEW file uploads (only if user selected new files)
+    if (req.files) {
+      // Update PDF if new one uploaded
+      if (req.files.pdf && req.files.pdf[0]) {
+        // Delete old PDF from Cloudinary if exists
+        if (book.fileUrl) {
+          const publicId = book.fileUrl.split('/').pop().split('.')[0];
+          await cloudinary.v2.uploader.destroy(`books/files/${publicId}`, { 
+            resource_type: "raw" 
+          });
+        }
+        
+        // Upload new PDF
+        const pdfBuffer = req.files.pdf[0].buffer;
+        const pdfUrl = await uploadToCloudinaryStream(pdfBuffer, "books/files", "raw");
+        book.fileUrl = pdfUrl;
+      }
+
+      // Update Cover if new one uploaded
+      if (req.files.cover && req.files.cover[0]) {
+        // Delete old cover from Cloudinary if exists
+        if (book.coverImage) {
+          const publicId = book.coverImage.split('/').pop().split('.')[0];
+          await cloudinary.v2.uploader.destroy(`books/covers/${publicId}`, { 
+            resource_type: "image" 
+          });
+        }
+        
+        // Upload new cover
+        const coverBuffer = req.files.cover[0].buffer;
+        const coverUrl = await uploadToCloudinaryStream(coverBuffer, "books/covers", "image");
+        book.coverImage = coverUrl;
+      }
+    }
+
     await book.save();
     res.json({ message: "Book updated successfully", book });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 // ---------------- Delete a book ----------------
