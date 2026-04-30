@@ -26,7 +26,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(helmet())
 app.use(cors({
-    origin: ["http://localhost:3000","https://christianitycrossroads.onrender.com"],
+    origin: ["http://localhost:3000",
+        "https://christianitycrossroads.onrender.com",
+        "https://christianity-at-the-crossroads.com",
+        "https://www.christianity-at-the-crossroads.com"
+],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
