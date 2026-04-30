@@ -31,6 +31,10 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }))
+
+app.get("/api", (req, res) => {
+  res.json({ message: "API is running 🚀" });
+});
 app.use('/api/user',userRouter)
 app.use('/api/payment',paymentRouter)
 app.use('/api/wishlist',wishlistRouter)
