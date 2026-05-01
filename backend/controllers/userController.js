@@ -49,10 +49,10 @@ export const signIn = async (req, res) => {
 console.log("EXPRESS SECRET LENGTH:", process.env.JWT_SECRET?.length);
     console.log("Cookie settings:", { isProduction, secure: isProduction, sameSite: isProduction ? "None" : "Lax" });
     res.cookie("token", token, {
-      httpOnly: true,
+      httpOnly: false,
       secure: isProduction,
       sameSite: isProduction ? "None" : "Lax",
-      domain: ".christianity-at-the-crossroads.com",
+      // domain: ".christianity-at-the-crossroads.com",
       path: "/",
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
