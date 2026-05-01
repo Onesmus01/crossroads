@@ -29,8 +29,11 @@ export const uploadToCloudinaryStream = (buffer, folder, resource_type = "auto")
   });
 };
 export const addBook = async (req, res) => {
+  const pdfFile = req.files?.pdf?.[0];
+  const coverFile = req.files?.cover?.[0];
+
   try {
-    const { title, description, price,author } = req.body;
+    const { title, description, price, author } = req.body;
 
     if (!title || !description || !price) {
       return res.status(400).json({ message: "Title, description, and price are required" });
@@ -41,28 +44,33 @@ export const addBook = async (req, res) => {
       return res.status(400).json({ message: "Price must be a number" });
     }
 
-    if (!req.files || !req.files.pdf) {
+    if (!pdfFile) {
       return res.status(400).json({ message: "PDF file is required" });
     }
 
-    // ✅ Upload PDF
-    const pdfBuffer = req.files.pdf[0].buffer;
-    const pdfUrl = await uploadToCloudinaryStream(pdfBuffer, "books/files", "raw");
+    // Upload PDF from disk
+    const pdfResult = await cloudinary.v2.uploader.upload(pdfFile.path, {
+      folder: "books/files",
+      resource_type: "raw",
+    });
 
-    // ✅ Upload Cover if exists
+    // Upload Cover from disk (if exists)
     let coverUrl = "";
-    if (req.files.cover) {
-      const coverBuffer = req.files.cover[0].buffer;
-      coverUrl = await uploadToCloudinaryStream(coverBuffer, "books/covers", "image");
+    if (coverFile) {
+      const coverResult = await cloudinary.v2.uploader.upload(coverFile.path, {
+        folder: "books/covers",
+        resource_type: "image",
+      });
+      coverUrl = coverResult.secure_url;
     }
 
-    // ✅ Save to MongoDB
+    // Save to MongoDB
     const newBook = await Book.create({
       title,
-      author: author || "Unknown Author", // Placeholder, can be extended to accept author field
+      author: author || "Unknown Author",
       description,
       price: numericPrice,
-      fileUrl: pdfUrl,
+      fileUrl: pdfResult.secure_url,
       coverImage: coverUrl,
     });
 
@@ -74,6 +82,10 @@ export const addBook = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  } finally {
+    // Clean up temp files
+    if (pdfFile?.path && fs.existsSync(pdfFile.path)) fs.unlinkSync(pdfFile.path);
+    if (coverFile?.path && fs.existsSync(coverFile.path)) fs.unlinkSync(coverFile.path);
   }
 };
 // Get all books
@@ -107,6 +119,8 @@ export const getBookById = async (req, res) => {
 export const updateBook = async (req, res) => {
   const { id } = req.params;
   const { title, description, price, author } = req.body;
+  const pdfFile = req.files?.pdf?.[0];
+  const coverFile = req.files?.cover?.[0];
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ message: "Invalid book ID" });
@@ -122,10 +136,10 @@ export const updateBook = async (req, res) => {
     if (price !== undefined) book.price = Number(price);
     if (author !== undefined) book.author = author;
 
-    // Handle NEW file uploads (only if user selected new files)
+    // Handle NEW file uploads
     if (req.files) {
       // Update PDF if new one uploaded
-      if (req.files.pdf && req.files.pdf[0]) {
+      if (pdfFile) {
         // Delete old PDF from Cloudinary if exists
         if (book.fileUrl) {
           const publicId = book.fileUrl.split('/').pop().split('.')[0];
@@ -134,14 +148,16 @@ export const updateBook = async (req, res) => {
           });
         }
         
-        // Upload new PDF
-        const pdfBuffer = req.files.pdf[0].buffer;
-        const pdfUrl = await uploadToCloudinaryStream(pdfBuffer, "books/files", "raw");
-        book.fileUrl = pdfUrl;
+        // Upload new PDF from disk
+        const pdfResult = await cloudinary.v2.uploader.upload(pdfFile.path, {
+          folder: "books/files",
+          resource_type: "raw",
+        });
+        book.fileUrl = pdfResult.secure_url;
       }
 
       // Update Cover if new one uploaded
-      if (req.files.cover && req.files.cover[0]) {
+      if (coverFile) {
         // Delete old cover from Cloudinary if exists
         if (book.coverImage) {
           const publicId = book.coverImage.split('/').pop().split('.')[0];
@@ -150,10 +166,12 @@ export const updateBook = async (req, res) => {
           });
         }
         
-        // Upload new cover
-        const coverBuffer = req.files.cover[0].buffer;
-        const coverUrl = await uploadToCloudinaryStream(coverBuffer, "books/covers", "image");
-        book.coverImage = coverUrl;
+        // Upload new cover from disk
+        const coverResult = await cloudinary.v2.uploader.upload(coverFile.path, {
+          folder: "books/covers",
+          resource_type: "image",
+        });
+        book.coverImage = coverResult.secure_url;
       }
     }
 
@@ -162,6 +180,10 @@ export const updateBook = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
+  } finally {
+    // Clean up temp files
+    if (pdfFile?.path && fs.existsSync(pdfFile.path)) fs.unlinkSync(pdfFile.path);
+    if (coverFile?.path && fs.existsSync(coverFile.path)) fs.unlinkSync(coverFile.path);
   }
 };
 // ---------------- Delete a book ----------------
