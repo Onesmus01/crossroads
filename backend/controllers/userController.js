@@ -52,7 +52,7 @@ console.log("EXPRESS SECRET LENGTH:", process.env.JWT_SECRET?.length);
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "None" : "Lax",
-      domain: undefined,
+      domain: ".christianity-at-the-crossroads.com",
       path: "/",
       maxAge: 2 * 24 * 60 * 60 * 1000,
     });
