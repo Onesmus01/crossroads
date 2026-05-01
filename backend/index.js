@@ -27,9 +27,9 @@ app.use(cookieParser())
 app.use(helmet())
 app.use(cors({
     origin: ["http://localhost:3000",
-        "https://christianitycrossroads.onrender.com",
-        "https://christianity-at-the-crossroads.com",
-        "https://www.christianity-at-the-crossroads.com"
+            "https://christianitycrossroads.onrender.com",
+            "https://christianity-at-the-crossroads.com",
+            "https://www.christianity-at-the-crossroads.com"
 ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -38,6 +38,11 @@ app.use(cors({
 
 app.get("/api", (req, res) => {
   res.json({ message: "API is running 🚀" });
+});
+
+app.get("/api/user/me", (req, res) => {
+  console.log("COOKIE:", req.cookies);
+  res.json(req.cookies);
 });
 app.use('/api/user',userRouter)
 app.use('/api/payment',paymentRouter)
