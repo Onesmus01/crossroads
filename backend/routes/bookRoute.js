@@ -13,6 +13,7 @@ import authToken from "../middleware/authToken.js";
 import isAdmin from "../middleware/adminAuth.js";
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
+import fs from "fs";
 
 const router = express.Router();
 
