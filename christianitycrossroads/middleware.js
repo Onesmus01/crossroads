@@ -1,12 +1,12 @@
-// import { NextResponse } from "next/server";
-// import { jwtVerify } from "jose";
+import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
-// // ✅ Encode the string to Uint8Array
+// ✅ Encode the string to Uint8Array
 // const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET);
 // console.log("ENV CHECK:", process.env.JWT_SECRET ? "FOUND" : "MISSING");
 // console.log("VALUE:", process.env.JWT_SECRET);
 
-// export async function middleware(req) {
+export async function middleware(req) {
 //   const { pathname } = req.nextUrl;
   
 //   console.log(`[Middleware] Checking: ${pathname}`);
@@ -42,8 +42,8 @@
 //     console.log(`[Middleware] JWT Error: ${error.message}`);
 //     return NextResponse.redirect(new URL("/login", req.url));
 //   }
-// }
+ }
 
-// export const config = {
-//   matcher: ["/admin/:path*"]
-// };
+export const config = {
+  // matcher: ["/admin/:path*"]
+};
