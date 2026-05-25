@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   description:
     'Explore Christian books, teachings, and inspirational content that strengthens faith and spiritual growth.',
 
-  metadataBase: new URL('https://christianitycrossroads.com'),
+  metadataBase: new URL('https://www.christianity-at-the-crossroads.com'),
 
   /* ✅ CANONICAL FIX */
   alternates: {
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     title: 'Christianity Crossroads',
     description:
       'Explore Christian books, teachings, and inspirational content.',
-    url: 'https://christianitycrossroads.com',
+    url: 'https://www.christianity-at-the-crossroads.com',
     siteName: 'Christianity Crossroads',
     type: 'website',
   },

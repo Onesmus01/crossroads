@@ -19,18 +19,18 @@ export const metadata: Metadata = {
     'Spiritual Growth',
   ],
 
-  metadataBase: new URL('https://christianitycrossroads.com'),
+  metadataBase: new URL('https://www.christianity-at-the-crossroads.com'),
 
   openGraph: {
     title: 'Christianity Crossroads - Explore Faith and Community',
     description:
       'Discover inspiring Christian books, teachings, and faith-based inspiration.',
-    url: 'https://christianitycrossroads.com',
+    url: 'https://www.christianity-at-the-crossroads.com',
     siteName: 'Christianity Crossroads',
     type: 'website',
     images: [
       {
-        url: 'https://christianitycrossroads.com/og-image.jpg',
+        url: 'https://www.christianity-at-the-crossroads.com/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'Christianity Crossroads',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     title: 'Christianity Crossroads - Explore Faith and Community',
     description:
       'Discover inspiring Christian books, teachings, and faith-based inspiration.',
-    images: ['https://christianitycrossroads.com/twitter-image.jpg'],
+    images: ['https://www.christianity-at-the-crossroads.com/twitter-image.jpg'],
   },
 
   robots: {
@@ -57,7 +57,7 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'Christianity Crossroads',
-  url: 'https://christianitycrossroads.com',
+  url: 'https://www.christianity-at-the-crossroads.com',
   description:
     'Discover inspiring content, connect with fellow believers, and deepen your faith.',
   publisher: {
