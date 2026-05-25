@@ -27,13 +27,45 @@ export async function generateStaticParams() {
 // Generate metadata for each book page
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  return {
-    title: `Book Details - ${id}`,
-    description: 'View book details and purchase',
-  };
+  
+  if (!id) {
+    return {
+      title: 'Book Not Found',
+      description: 'The requested book could not be found.',
+    };
+  }
+
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080/api';
+  
+  try {
+    const res = await fetch(`${backendUrl}/book/book-details/${id}`, {
+      next: { revalidate: 60 },
+    });
+    
+    if (!res.ok) throw new Error('Failed to fetch book');
+    
+    const book = await res.json();
+    const bookData = Array.isArray(book) ? book[0] : book.data || book;
+    
+    return {
+      title: `${bookData?.title || 'Book'} | Details`,
+      description: bookData?.description?.slice(0, 160) || 'View book details and purchase',
+      keywords: [bookData?.title, bookData?.author, 'Book Details', 'Purchase Book'].filter(Boolean),
+      openGraph: {
+        title: bookData?.title,
+        description: bookData?.description,
+        images: bookData?.image ? [{ url: bookData.image }] : [],
+      },
+    };
+  } catch (error) {
+    return {
+      title: 'Book Details',
+      description: 'View book details and purchase',
+    };
+  }
 }
 
-// FIX: Make component async and await params
+// Server component that awaits params and passes to client component
 export default async function BookDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return <BookDetailsClient bookId={id} />;
