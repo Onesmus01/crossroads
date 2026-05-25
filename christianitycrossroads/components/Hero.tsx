@@ -2,27 +2,30 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
+import heroImage from '@/public/hero-crossroads.jpg'; // Import for build-time optimization
 
 function Hero() {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <section className="relative w-full min-h-[55vh] sm:min-h-[60vh] lg:min-h-screen overflow-hidden">
+    <section className="relative w-full h-[55vh] sm:h-[60vh] lg:h-screen overflow-hidden">
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src="/hero-crossroads.jpg"
-          alt="Christianity Crossroads"
+          src={heroImage}
+          alt="Christianity Crossroads - Discover sacred wisdom and faith-centered literature"
           fill
-          className="object-cover"
           priority
-          quality={90}
+          quality={60}              // Reduced from 90 — background images don't need high fidelity
+          sizes="100vw"            // Tells Next.js this is always full viewport width
+          placeholder="blur"       // Blur-up effect prevents layout shift + improves perceived speed
+          className="object-cover"
         />
         <div className="absolute inset-0 bg-black/40 dark:bg-black/50" />
       </div>
 
       {/* Content */}
-      <div className="relative h-full min-h-[55vh] sm:min-h-[60vh] lg:min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-8 pb-4 sm:pb-6 lg:pb-8">
+      <div className="relative h-full flex items-center justify-center px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl w-full text-center space-y-4 sm:space-y-5 lg:space-y-6">
           
           {/* Badge */}
@@ -34,7 +37,9 @@ function Hero() {
           <div className="space-y-2 sm:space-y-3">
             <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] sm:leading-tight">
               Christianity{' '}
-              <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">at</span>
+              <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
+                at
+              </span>
               <br className="hidden sm:block" />
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 Crossroads
@@ -53,7 +58,10 @@ function Hero() {
               className="relative w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg bg-primary text-primary-foreground text-sm sm:text-base font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
             >
               Explore Collection
-              <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 opacity-0 hover:opacity-100 transition-opacity duration-500" />
+              <span 
+                className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 opacity-0 hover:opacity-100 transition-opacity duration-500"
+                aria-hidden="true"  // Decorative element — hide from screen readers
+              />
             </button>
             <button className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm sm:text-base font-medium transition-all duration-300 hover:bg-white/20 hover:border-white/30 active:scale-95">
               Learn More

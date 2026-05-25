@@ -19,8 +19,8 @@ export const viewport: Viewport = {
 
 
 export const metadata: Metadata = {
-  title: 'Bookshelf - Your Personal Library',
-  description: 'Store, organize, and access your favorite books in one beautiful place.',
+  title: 'Christianity Crossroads',
+  description: 'Access your favorite books in one beautiful place.',
   generator: 'Books Storage organizer App',
   // Remove viewport from here since we export it separately above
 };
