@@ -10,10 +10,6 @@ import './globals.css';
 
 const _geist = Geist({ subsets: ['latin'] });
 
-// Remove the floating <meta> tag from here
-// <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-
-// Use this instead for viewport settings (separate export)
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,

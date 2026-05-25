@@ -58,7 +58,31 @@ export const metadata: Metadata = {
   },  
   generator: 'Christianity Crossroads App',
 }
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Christianity Crossroads",
+  "url": "https://www.christianitycrossroads.com",
+  "description": "Discover inspiring content, connect with fellow believers, and deepen your faith at Christianity Crossroads.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Christianity Crossroads"
+  }
+};
+
+export const metadataBase = new URL('https://www.christianitycrossroads.com');
+
+export const alternates = {
+  canonical: 'https://www.christianitycrossroads.com',
+};
+
+
 export default function Home() {
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+  />
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
