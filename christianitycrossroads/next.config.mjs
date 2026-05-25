@@ -3,25 +3,11 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-
-  images: {
-    // ❌ REMOVED: unoptimized: true
-    // This was disabling ALL Next.js image optimization
-    
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-        pathname: '/**',
-      },
-    ],
-    
-    formats: ['image/webp', 'image/avif'], // Serve modern formats automatically
-    minimumCacheTTL: 60, // Cache optimized images for 60 seconds
+    // output: "export", // ✅ Enable static export
+    images: {
+    unoptimized: true,
   },
+
 }
 
 export default nextConfig
