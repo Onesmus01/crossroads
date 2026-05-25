@@ -12,13 +12,13 @@ function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src={heroImage}
-          alt="Christianity Crossroads - Discover sacred wisdom and faith-centered literature"
+          src={heroImage}      // ← static import, not string
+          alt="..."
           fill
           priority
-          quality={60}              // Reduced from 90 — background images don't need high fidelity
-          sizes="100vw"            // Tells Next.js this is always full viewport width
-          placeholder="blur"       // Blur-up effect prevents layout shift + improves perceived speed
+          quality={60}
+          sizes="100vw"
+          placeholder="blur"    // ← now works!
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/40 dark:bg-black/50" />
