@@ -5,60 +5,6 @@ import { motion } from 'framer-motion';
 import { BookOpen, Quote, Award, Heart, Mail, MapPin } from 'lucide-react';
 import Image from 'next/image';
 
-export const metadata = {
-  title: 'Christianity Crossroads - Explore Faith and Community',
-  description: 'Discover inspiring content, connect with fellow believers, and deepen your faith at Christianity Crossroads.',
-  keywords: ['Christianity', 'Faith', 'Community', 'Inspiration', 'Spiritual Growth'],
-  openGraph: {
-    title: 'Christianity Crossroads - Explore Faith and Community: unlimited wisdom',
-    description: 'Discover inspiring content, connect with fellow believers, and deepen your faith at Christianity Crossroads.',
-    url: 'https://www.christianitycrossroads.com',
-    siteName: 'Christianity Crossroads',
-    images: [
-      {
-        url: 'https://www.christianitycrossroads.com/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'Christianity Crossroads - Explore Faith and Community',
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Christianity Crossroads - Explore Faith and Community',
-    description: 'Discover inspiring content, connect with fellow believers, and deepen your faith at Christianity Crossroads.',
-    creator: '@ChristianityCrossroads',
-    images: ['https://www.christianitycrossroads.com/twitter-image.jpg'],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    noarchive: false,
-    nosnippet: false,
-    noimageindex: false,
-    notranslate: false,
-    noindex: false,
-    nofollow: false,
-    nocache: false,
-    googleBot: {
-      index: true,
-      follow: true,
-      noarchive: false,
-      nosnippet: false,
-      noimageindex: false,
-      notranslate: false,
-      noindex: false,
-      nofollow: false,
-      nocache: false,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },  
-  generator: 'Christianity Crossroads App',
-}
 export default function AboutPage() {
   const fadeInUp = {
     initial: { opacity: 0, y: 20 },
