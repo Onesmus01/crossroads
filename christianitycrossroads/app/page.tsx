@@ -6,7 +6,7 @@ import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
 
 /* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
-const baseUrl = 'https://www.christianity-at-the-crossroads.com/'
+const baseUrl = 'https://www.christianity-at-the-crossroads.com'
 
 /* ---------------- SEO METADATA ---------------- */
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
 
   /* IMPORTANT: forces single canonical identity */
   alternates: {
-    canonical: '/',
+    canonical: baseUrl,
   },
 
   /* ---------------- OPEN GRAPH ---------------- */

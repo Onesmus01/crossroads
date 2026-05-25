@@ -34,7 +34,7 @@ export const metadata: Metadata = {
 
   /* ✅ CANONICAL FIX */
   alternates: {
-    canonical: '/',
+    canonical: 'https://www.christianity-at-the-crossroads.com',
   },
 
   openGraph: {
