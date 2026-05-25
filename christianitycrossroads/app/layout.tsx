@@ -23,8 +23,8 @@ export const viewport: Viewport = {
 /* ---------------- SEO METADATA ---------------- */
 export const metadata: Metadata = {
   title: {
-    default: 'Christianity Crossroads',
-    template: '%s | Christianity Crossroads',
+    default: 'Christianity at the Crossroads',
+    template: '%s | Christianity at the Crossroads',
   },
 
   description:
@@ -38,17 +38,17 @@ export const metadata: Metadata = {
   },
 
   openGraph: {
-    title: 'Christianity Crossroads',
+    title: 'Christianity at the Crossroads',
     description:
       'Explore Christian books, teachings, and inspirational content.',
     url: 'https://www.christianity-at-the-crossroads.com',
-    siteName: 'Christianity Crossroads',
+    siteName: 'Christianity at the Crossroads',
     type: 'website',
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: 'Christianity Crossroads',
+    title: 'Christianity at the Crossroads',
     description:
       'Explore Christian books, teachings, and inspirational content.',
   },

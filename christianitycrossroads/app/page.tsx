@@ -6,7 +6,7 @@ import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
 
 /* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
-const baseUrl = 'https://www.christianity-at-the-crossroads.com'
+const baseUrl = 'https://www.christianity-at-the-crossroads.com/'
 
 /* ---------------- SEO METADATA ---------------- */
 export const metadata: Metadata = {
@@ -52,6 +52,7 @@ export const metadata: Metadata = {
       },
     ],
   },
+  
 
   /* ---------------- TWITTER ---------------- */
   twitter: {
@@ -106,7 +107,6 @@ const structuredData = {
 export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header />
 
       <main className="flex-1">
         <Hero />
@@ -119,8 +119,6 @@ export default function Home() {
           />
         </div>
       </main>
-
-      <Footer />
 
       {/* JSON-LD SEO (GOOGLE UNDERSTANDING LAYER) */}
       <script
