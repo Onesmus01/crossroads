@@ -4,7 +4,7 @@ import { BooksSection } from '@/components/BooksSection';
 import { Footer } from '@/components/Footer';
 
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Christianity Crossroads - Explore Faith and Community',
   description: 'Discover inspiring content, connect with fellow believers, and deepen your faith at Christianity Crossroads.',
   keywords: ['Christianity', 'Faith', 'Community', 'Inspiration', 'Spiritual Growth'],
