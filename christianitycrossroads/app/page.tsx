@@ -5,18 +5,20 @@ import Hero from '@/components/Hero'
 import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
 
-/* ---------------- BASE URL ---------------- */
+/* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
 const baseUrl = 'https://www.christianity-at-the-crossroads.com'
 
 /* ---------------- SEO METADATA ---------------- */
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
+
   title: {
     default: 'Christianity at the Crossroads',
     template: '%s | Christianity at the Crossroads',
   },
 
   description:
-    'Christian books, devotionals, teachings, and inspirational content designed to strengthen faith, encourage spiritual growth, and deepen your walk with God.',
+    'Christian books, devotionals, teachings, and inspirational content to strengthen faith and support spiritual growth.',
 
   keywords: [
     'Christianity at the Crossroads',
@@ -28,16 +30,16 @@ export const metadata: Metadata = {
     'Christian Inspiration',
   ],
 
-  metadataBase: new URL(baseUrl),
-
+  /* IMPORTANT: forces single canonical identity */
   alternates: {
     canonical: '/',
   },
 
+  /* ---------------- OPEN GRAPH ---------------- */
   openGraph: {
     title: 'Christianity at the Crossroads',
     description:
-      'Discover Christian books, teachings, devotionals, and faith-based inspiration.',
+      'Discover Christian books, devotionals, teachings, and faith-based inspiration.',
     url: baseUrl,
     siteName: 'Christianity at the Crossroads',
     type: 'website',
@@ -51,6 +53,7 @@ export const metadata: Metadata = {
     ],
   },
 
+  /* ---------------- TWITTER ---------------- */
   twitter: {
     card: 'summary_large_image',
     title: 'Christianity at the Crossroads',
@@ -59,13 +62,21 @@ export const metadata: Metadata = {
     images: [`${baseUrl}/og-image.jpg`],
   },
 
+  /* ---------------- ROBOTS (GOOGLE OPTIMIZED) ---------------- */
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
   },
 }
 
-/* ---------------- STRUCTURED DATA ---------------- */
+/* ---------------- STRUCTURED DATA (SEO ENTITY BOOST) ---------------- */
 const structuredData = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -75,10 +86,10 @@ const structuredData = {
       url: baseUrl,
       description:
         'Christian books, teachings, devotionals, and inspirational content.',
-      publisher: {
-        '@type': 'Organization',
-        name: 'Christianity at the Crossroads',
-        url: baseUrl,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${baseUrl}/search?q={query}`,
+        'query-input': 'required name=query',
       },
     },
     {
@@ -86,13 +97,7 @@ const structuredData = {
       name: 'Christianity at the Crossroads',
       url: baseUrl,
       logo: `${baseUrl}/logo.png`,
-    },
-    {
-      '@type': 'Blog',
-      name: 'Christianity at the Crossroads Blog',
-      url: `${baseUrl}/blog`,
-      description:
-        'Devotionals, teachings, and Christian inspiration for spiritual growth.',
+      sameAs: [],
     },
   ],
 }
@@ -117,7 +122,7 @@ export default function Home() {
 
       <Footer />
 
-      {/* SEO JSON-LD */}
+      {/* JSON-LD SEO (GOOGLE UNDERSTANDING LAYER) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
