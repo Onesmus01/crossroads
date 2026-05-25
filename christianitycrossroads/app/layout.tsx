@@ -1,45 +1,84 @@
-import React from "react"
-import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
-import { RootLayoutClient } from './layout-client';
-import { ContextProvider } from "@/context/userContext"; 
-import { Header } from '@/components/Header';
-import { Toaster } from "react-hot-toast";
-import { Footer } from '@/components/Footer';
-import './globals.css';
+import type { Metadata, Viewport } from 'next'
+import { Geist } from 'next/font/google'
 
-const _geist = Geist({ subsets: ['latin'] });
+import { RootLayoutClient } from './layout-client'
+import { ContextProvider } from '@/context/userContext'
+import { Header } from '@/components/Header'
+import { Footer } from '@/components/Footer'
 
+import { Toaster } from 'react-hot-toast'
+import './globals.css'
+
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-geist',
+})
+
+/* ---------------- VIEWPORT ---------------- */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-};
+}
 
-
+/* ---------------- SEO METADATA ---------------- */
 export const metadata: Metadata = {
-  title: 'Christianity Crossroads',
-  description: 'Access your favorite books in one beautiful place.',
-  generator: 'Books Storage organizer App',
-  // Remove viewport from here since we export it separately above
-};
+  title: {
+    default: 'Christianity Crossroads',
+    template: '%s | Christianity Crossroads',
+  },
 
+  description:
+    'Explore Christian books, teachings, and inspirational content that strengthens faith and spiritual growth.',
+
+  metadataBase: new URL('https://www.christianitycrossroads.com'),
+
+  /* ✅ CANONICAL FIX */
+  alternates: {
+    canonical: '/',
+  },
+
+  openGraph: {
+    title: 'Christianity Crossroads',
+    description:
+      'Explore Christian books, teachings, and inspirational content.',
+    url: 'https://www.christianitycrossroads.com',
+    siteName: 'Christianity Crossroads',
+    type: 'website',
+  },
+
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Christianity Crossroads',
+    description:
+      'Explore Christian books, teachings, and inspirational content.',
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+}
+
+/* ---------------- ROOT LAYOUT ---------------- */
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased bg-background text-foreground transition-colors duration-300">
+    <html lang="en" className={geist.variable} suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground antialiased">
         <ContextProvider>
           <Header />
-          <RootLayoutClient>{children}</RootLayoutClient>
-          <Toaster position="top-right" />
+
+          <RootLayoutClient>
+            {children}
+          </RootLayoutClient>
+
           <Footer />
+          <Toaster position="top-right" />
         </ContextProvider>
       </body>
     </html>
-  );
+  )
 }
