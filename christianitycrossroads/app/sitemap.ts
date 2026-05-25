@@ -1,67 +1,76 @@
-import { MetadataRoute } from "next";
+import { MetadataRoute } from 'next'
 
+const baseUrl = 'https://www.christianity-at-the-crossroads.com'
+
+/* ---------------- FETCH BOOKS ---------------- */
+async function getBooks() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/book/all-books`,
+      { next: { revalidate: 86400 } } // cache 24h
+    )
+
+    if (!res.ok) return []
+
+    const data = await res.json()
+
+    return Array.isArray(data)
+      ? data
+      : data.books || data.data || []
+  } catch (err) {
+    console.error('Sitemap fetch error:', err)
+    return []
+  }
+}
+
+/* ---------------- SITEMAP ---------------- */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = "https://www.christianity-at-the-crossroads.com";
-    const backendUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL ??
-        "https://www.christianity-at-the-crossroads.com/api";
+  const books = await getBooks()
 
-    let bookUrls: MetadataRoute.Sitemap = [];
+  const bookUrls: MetadataRoute.Sitemap = books
+    .map((book: any) => {
+      const id = book._id || book.id
+      if (!id) return null
 
-    try {
-        const res = await fetch(`${backendUrl}/book/all-books`, {
-            next: { revalidate: 86400 },
-        });
+      return {
+        url: `${baseUrl}/bookDetails/${id}`,
+        lastModified: new Date(),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }
+    })
+    .filter(Boolean) as MetadataRoute.Sitemap
 
-        if (res.ok) {
-            const books = await res.json();
-            const bookList = Array.isArray(books)
-                ? books
-                : books.data || books.books || [];
+  return [
+    /* HOME */
+    {
+      url: baseUrl,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
+    },
 
-            bookUrls = bookList
-                .map((book: any) => {
-                    const id = book._id?.toString() || book.id?.toString();
-                    if (!id) return null;
+    /* STATIC PAGES */
+    {
+      url: `${baseUrl}/about`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/contact`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/books`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
 
-                    return {
-                        url: `${baseUrl}/books/${id}`,
-                        lastModified: new Date(),
-                        changeFrequency: "weekly" as const,
-                        priority: 0.9,
-                    };
-                })
-                .filter(Boolean) as MetadataRoute.Sitemap;
-        }
-    } catch (err) {
-        console.error("Sitemap fetch error:", err);
-    }
-
-    return [
-        {
-            url: baseUrl,
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 1.0,
-        },
-        {
-            url: `${baseUrl}/about`,
-            lastModified: new Date(),
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/contact`,
-            lastModified: new Date(),
-            changeFrequency: "monthly",
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/books`,
-            lastModified: new Date(),
-            changeFrequency: "weekly",
-            priority: 0.9,
-        },
-        ...bookUrls,
-    ];
+    /* DYNAMIC BOOK PAGES */
+    ...bookUrls,
+  ]
 }
