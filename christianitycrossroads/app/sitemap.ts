@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = "https://www.christianitycrossroads.com";
+    const baseUrl = "https://christianitycrossroads.com";
     const backendUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ??
         "http://localhost:8080/api";
