@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { BookOpen, Quote, Award, Heart, Mail, MapPin } from 'lucide-react';
 import Image from 'next/image';
 
-export const metadata: Metadata = {
+export const metadata = {
   title: 'Christianity Crossroads - Explore Faith and Community',
   description: 'Discover inspiring content, connect with fellow believers, and deepen your faith at Christianity Crossroads.',
   keywords: ['Christianity', 'Faith', 'Community', 'Inspiration', 'Spiritual Growth'],

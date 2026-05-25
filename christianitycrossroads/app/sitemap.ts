@@ -4,11 +4,10 @@ export default async function sitemap(): Promise<<MetadataRoute.Sitemap> {
     const baseUrl = 'https://www.christianitycrossroads.com';
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080/api';
 
-    // Fetch all books for dynamic URLs
     let bookUrls: MetadataRoute.Sitemap = [];
     try {
         const res = await fetch(`${backendUrl}/book/all-books`, {
-            next: { revalidate: 86400 }, // Revalidate once per day
+            next: { revalidate: 86400 },
         });
         
         if (res.ok) {
