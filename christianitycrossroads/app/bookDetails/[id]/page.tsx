@@ -38,7 +38,7 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const baseUrl = 'https://www.christianitycrossroads.com';
+  const baseUrl = 'https://christianitycrossroads.com';
   
   if (!id) {
     return {
@@ -91,7 +91,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ].filter(Boolean),
       
       alternates: {
-        canonical: `https://www.christianitycrossroads.com/books/${id}`,
+        canonical: `https://christianitycrossroads.com/books/${id}`,
       },
       
       robots: {
@@ -152,7 +152,7 @@ const structuredData = {
     name: 'Reverent Vincent Mboya',
   },
   description: 'Example book description',
-  image: 'https://www.christianitycrossroads.com/images/example-book.jpg',
+  image: 'https://christianitycrossroads.com/images/example-book.jpg',
   isbn: '978-0-123456-78-9',
   numberOfPages: 320,
   inLanguage: 'English',
@@ -166,7 +166,7 @@ const structuredData = {
     priceCurrency: 'KES',
     price: '150.00',
     availability: 'https://schema.org/InStock',
-    url: 'https://www.christianitycrossroads.com/books/example-book',
+    url: 'https://christianitycrossroads.com/books/example-book',
   },
 };
 
@@ -212,7 +212,7 @@ export default async function BookDetailsPage({ params }: Props) {
           priceCurrency: 'KES',
           price: bookData?.price?.toString() || '0',
           availability: 'https://schema.org/InStock',
-          url: `https://www.christianitycrossroads.com/books/${id}`,
+          url: `https://christianitycrossroads.com/books/${id}`,
         },
         aggregateRating: bookData?.rating ? {
           '@type': 'AggregateRating',
