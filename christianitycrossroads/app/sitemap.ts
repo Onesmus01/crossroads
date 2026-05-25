@@ -4,7 +4,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = "https://www.christianity-at-the-crossroads.com";
     const backendUrl =
         process.env.NEXT_PUBLIC_BACKEND_URL ??
-        "http://localhost:8080/api";
+        "https://www.christianity-at-the-crossroads.com/api";
 
     let bookUrls: MetadataRoute.Sitemap = [];
 
@@ -22,7 +22,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             bookUrls = bookList
                 .map((book: any) => {
                     const id = book._id?.toString() || book.id?.toString();
-
                     if (!id) return null;
 
                     return {
@@ -34,8 +33,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 })
                 .filter(Boolean) as MetadataRoute.Sitemap;
         }
-    } catch (error) {
-        console.error("Failed to fetch books for sitemap:", error);
+    } catch (err) {
+        console.error("Sitemap fetch error:", err);
     }
 
     return [
