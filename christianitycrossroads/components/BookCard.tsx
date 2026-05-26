@@ -159,8 +159,9 @@ export function BookCard({
         {/* Rating - Bottom Left */}
         <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 flex items-center gap-0.5 sm:gap-1 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full z-10">
           <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
-          <span className="text-white text-[10px] sm:text-xs font-bold">{rating.toFixed(1)}</span>
-        </div>
+          <span className="text-white text-[10px] sm:text-xs font-bold">
+            {(rating ?? 0).toFixed(1)}
+          </span>        </div>
       </div>
 
       {/* Content */}

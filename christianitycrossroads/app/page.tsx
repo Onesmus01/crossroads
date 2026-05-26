@@ -4,7 +4,7 @@ import { Header } from '@/components/Header'
 import Hero from '@/components/Hero'
 import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
-
+import FeaturesPage  from '@/components/FeaturesPage'
 /* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
 const baseUrl = 'https://www.christianity-at-the-crossroads.com'
 
@@ -118,6 +118,7 @@ export default function Home() {
             variant="featured"
           />
         </div>
+        <FeaturesPage />
       </main>
 
       {/* JSON-LD SEO (GOOGLE UNDERSTANDING LAYER) */}
