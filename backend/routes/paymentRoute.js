@@ -13,7 +13,6 @@ import transporter from '../config/nodemailer.js';
 import isAdmin from '../middleware/adminAuth.js';
 import { getAllPayments, getPaymentStats } from "../controllers/paymentController.js";
 
-
 dotenv.config();
 const paymentRouter = express.Router();
 
@@ -23,14 +22,16 @@ const {
   MPESA_SHORTCODE,
   MPESA_PASSKEY,
   CALLBACK_URL,
-  WEBHOOK_SECRET,
   MPESA_ENV
 } = process.env;
 
-const BASE_URL =
-  MPESA_ENV === 'production'
-    ? 'https://api.safaricom.co.ke'
-    : 'https://sandbox.safaricom.co.ke';
+if (!MPESA_CONSUMER_KEY || !MPESA_CONSUMER_SECRET || !MPESA_SHORTCODE || !MPESA_PASSKEY || !CALLBACK_URL) {
+  throw new Error('Missing required M-Pesa environment variables.');
+}
+
+const BASE_URL = MPESA_ENV === 'production'
+  ? 'https://api.safaricom.co.ke'
+  : 'https://sandbox.safaricom.co.ke';
 
 /* ================= TOKEN CACHE ================= */
 let cachedToken = null;
@@ -62,12 +63,10 @@ const sanitizeInput = (input) =>
 const sendPaymentEmail = async (email, name, amount, transactionId, bookTitle) => {
   try {
     const doc = new PDFDocument();
-    let buffers = [];
-
+    const buffers = [];
     doc.on('data', buffers.push.bind(buffers));
     doc.on('end', async () => {
       const pdfData = Buffer.concat(buffers);
-
       await transporter.sendMail({
         from: process.env.SENDER_EMAIL,
         to: email,
@@ -81,7 +80,7 @@ const sendPaymentEmail = async (email, name, amount, transactionId, bookTitle) =
 
     doc.fontSize(18).text('Book Purchase Receipt', { align: 'center' });
     doc.moveDown();
-    doc.text(`Transaction ID: ${transactionId}`);
+    doc.fontSize(12).text(`Transaction ID: ${transactionId}`);
     doc.text(`Book: ${bookTitle}`);
     doc.text(`Amount: KES ${amount}`);
     doc.text(`Date: ${new Date().toLocaleString()}`);
@@ -97,62 +96,79 @@ paymentRouter.post('/mpesa/pay', authToken, async (req, res) => {
     let { phone, bookId } = req.body;
     phone = sanitizeInput(phone);
 
-    console.log('📱 Payment Request:', { phone, bookId, userId: req.userId }); // DEBUG
+    console.log('📱 Payment Request:', { phone, bookId, userId: req.userId });
 
     if (!phone || !bookId) {
       return res.status(400).json({ success: false, message: 'Phone and bookId required' });
     }
 
-    // Phone formatting
+    // Phone formatting: 0712345678 → 254712345678
     if (phone.startsWith('0')) phone = '254' + phone.slice(1);
     if (!/^(2547|2541)\d{8}$/.test(phone)) {
       return res.status(400).json({ success: false, message: 'Invalid phone format' });
     }
 
-    const user = await User.findById(req.userId);
-    const book = await Book.findById(bookId);
-
-    console.log('👤 User:', user?.name, '📚 Book:', book?.title); // DEBUG
+    const [user, book] = await Promise.all([
+      User.findById(req.userId),
+      Book.findById(bookId)
+    ]);
 
     if (!user || !book) {
       return res.status(404).json({ success: false, message: 'User or Book not found' });
     }
 
     if (user.purchasedBooks.includes(bookId)) {
-      return res.status(400).json({ success: false, message: 'Already purchased' });
-    }
-
-    // Check env vars
-    if (!MPESA_CONSUMER_KEY || !MPESA_PASSKEY) {
-      console.error('❌ Missing MPESA env vars');
-      return res.status(500).json({ success: false, message: 'Server config error' });
+      return res.status(400).json({ success: false, message: 'Book already purchased' });
     }
 
     const token = await getMpesaToken();
-    const timestamp = new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14);
-    const password = Buffer.from(`${MPESA_SHORTCODE}${MPESA_PASSKEY}${timestamp}`).toString('base64');
 
-    console.log('🔑 Token received, initiating STK...'); // DEBUG
+    /* =========================================
+       EXACT SAME LOGIC AS YOUR WORKING APP
+       ========================================= */
+    const storeNumber = process.env.MPESA_STORE_NUMBER;  // Daraja-registered merchant (BusinessShortCode + Password)
+    const tillNumber = MPESA_SHORTCODE;                  // Where money lands (PartyB)
+
+    if (!storeNumber) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server config error: MPESA_STORE_NUMBER not set',
+      });
+    }
+
+    const timestamp = new Date().toISOString().replace(/[-T:]/g, '').slice(0, 14);
+    // CRITICAL: Password uses STORE NUMBER (same as working app)
+    const password = Buffer.from(`${storeNumber}${MPESA_PASSKEY}${timestamp}`).toString('base64');
+
+    // DEBUG
+    console.log('[MPESA DEBUG] ==================================');
+    console.log('[MPESA DEBUG] Store Number (BusinessShortCode):', storeNumber);
+    console.log('[MPESA DEBUG] Till Number (PartyB):', tillNumber);
+    console.log('[MPESA DEBUG] PhoneNumber:', phone);
+    console.log('[MPESA DEBUG] Amount:', book.price);
+    console.log('[MPESA DEBUG] Timestamp:', timestamp);
+    console.log('[MPESA DEBUG] Password prefix:', password.slice(0, 20) + '...');
+    console.log('[MPESA DEBUG] ==================================');
 
     const { data } = await axios.post(
       `${BASE_URL}/mpesa/stkpush/v1/processrequest`,
       {
-        BusinessShortCode: MPESA_SHORTCODE,
+        BusinessShortCode: storeNumber,       // Daraja-registered number
         Password: password,
         Timestamp: timestamp,
-        TransactionType: 'CustomerPayBillOnline',
+        TransactionType: 'CustomerBuyGoodsOnline',
         Amount: book.price,
         PartyA: phone,
-        PartyB: MPESA_SHORTCODE,
+        PartyB: tillNumber,                   // Till where money goes
         PhoneNumber: phone,
-        CallBackURL: CALLBACK_URL,  // Make sure this is HTTPS
+        CallBackURL: CALLBACK_URL,
         AccountReference: `Book-${book._id.toString().slice(-6)}`,
-        TransactionDesc: `Purchase ${book.title.slice(0, 20)}`
+        TransactionDesc: 'Book Purchase',
       },
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    console.log('✅ STK Response:', data); // DEBUG
+    console.log('✅ STK Response:', data);
 
     await Payment.create({
       user: user._id,
@@ -160,112 +176,103 @@ paymentRouter.post('/mpesa/pay', authToken, async (req, res) => {
       phone,
       amount: book.price,
       status: 'pending',
-      transaction: data.CheckoutRequestID
+      transaction: data.CheckoutRequestID,
+      merchantRequestId: data.MerchantRequestID
     });
 
     res.json({
       success: true,
       message: 'STK Push sent. Enter M-Pesa PIN.',
-      checkoutRequestId: data.CheckoutRequestID
+      transaction_id: data.CheckoutRequestID,
     });
 
-  } catch (err) {
-    // DETAILED ERROR LOGGING
-    console.error('❌ [STK ERROR FULL]:', {
-      message: err.message,
-      response: err.response?.data,
-      status: err.response?.status,
-      stack: err.stack
-    });
-    
-    res.status(500).json({ 
-      success: false, 
-      message: err.response?.data?.errorMessage || 'STK Push failed',
-      debug: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
+  } catch (error) {
+    const errData = error.response?.data || error.message;
+    console.error('[MPESA STK ERROR]', errData);
+
+    let message = 'STK Push failed. Try again.';
+    if (errData?.errorCode === '400.002.02') message = 'Invalid phone number';
+    if (errData?.errorCode === '500.003.02') message = 'System busy. Try again later';
+    if (errData?.errorCode === '404.001.03') message = 'M-Pesa service error. Please try again.';
+    if (errData?.errorCode === '500.001.1001') message = 'Merchant configuration error. Contact support.';
+
+    res.status(500).json({ success: false, message });
   }
 });
 
 /* ================= WEBHOOK ================= */
 paymentRouter.post('/mpesa/webhook', express.json(), async (req, res) => {
+  res.status(200).json({ ResultCode: 0, ResultDesc: 'Accepted' });
+
   try {
     const stkCallback = req.body?.Body?.stkCallback;
-    if (!stkCallback) return res.status(400).json({ message: 'Invalid payload' });
+    if (!stkCallback) {
+      console.warn('[WEBHOOK] Missing stkCallback');
+      return;
+    }
 
-    const { CheckoutRequestID, ResultCode } = stkCallback;
+    const { CheckoutRequestID, ResultCode, ResultDesc } = stkCallback;
+    console.log('📥 Webhook:', { CheckoutRequestID, ResultCode, ResultDesc });
 
     const payment = await Payment.findOne({ transaction: CheckoutRequestID });
-    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+    if (!payment || payment.status === 'success') return;
 
-    if (payment.status === 'success') return res.status(200).end();
-
-    const status =
-      ResultCode === 0
-        ? 'success'
-        : ResultCode === 1032
-        ? 'cancelled'
-        : 'failed';
-
+    const status = ResultCode === 0 ? 'success' : ResultCode === 1032 ? 'cancelled' : 'failed';
     payment.status = status;
+    payment.mpesaResultDesc = ResultDesc;
     await payment.save();
 
     await MpesaLog.create({
       transaction_id: CheckoutRequestID,
       status,
+      resultCode: ResultCode,
+      resultDesc: ResultDesc,
       payload: req.body
     });
 
     if (status === 'success') {
-      const user = await User.findById(payment.user);
-      const book = await Book.findById(payment.book);
+      const [user, book] = await Promise.all([
+        User.findById(payment.user),
+        Book.findById(payment.book)
+      ]);
 
       if (user && book) {
         if (!user.purchasedBooks.includes(book._id)) {
           user.purchasedBooks.push(book._id);
           await user.save();
         }
-
-        await sendPaymentEmail(
-          user.email,
-          user.name,
-          payment.amount,
-          CheckoutRequestID,
-          book.title
-        );
+        await sendPaymentEmail(user.email, user.name, payment.amount, CheckoutRequestID, book.title);
       }
     }
 
-    res.status(200).json({ message: 'Webhook processed' });
+    console.log(`✅ [WEBHOOK] Payment ${status}:`, CheckoutRequestID);
   } catch (err) {
     console.error('[WEBHOOK ERROR]', err);
-    res.status(500).json({ message: 'Webhook error' });
   }
 });
 
 /* ================= PAYMENT STATUS ================= */
 paymentRouter.get('/mpesa/status/:transactionId', authToken, async (req, res) => {
-  const payment = await Payment.findOne({
-    transaction: req.params.transactionId
-  });
+  try {
+    const payment = await Payment.findOne({ transaction: req.params.transactionId });
+    if (!payment) return res.status(404).json({ success: false, message: 'Not found' });
+    if (payment.user.toString() !== req.userId) return res.status(403).json({ success: false, message: 'Unauthorized' });
 
-  if (!payment)
-    return res.status(404).json({ success: false, message: 'Not found' });
-
-  res.json({
-    success: true,
-    status: payment.status
-  });
+    res.json({ success: true, status: payment.status, amount: payment.amount, createdAt: payment.createdAt });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch status' });
+  }
 });
 
+/* ================= ADMIN ROUTES ================= */
 paymentRouter.get("/all-payments", authToken, isAdmin, async (req, res) => {
   try {
     const payments = await Payment.find()
       .populate("user", "name email")
-      .populate("book", "title price");
-
+      .populate("book", "title price")
+      .sort({ createdAt: -1 });
     res.status(200).json({ success: true, payments });
   } catch (err) {
-    console.error(err);
     res.status(500).json({ success: false, message: "Failed to fetch payments", error: err.message });
   }
 });

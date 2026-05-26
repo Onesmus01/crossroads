@@ -154,7 +154,7 @@ const structuredData = {
   description: 'Example book description',
   image: 'https://www.christianity-at-the-crossroads.com/images/example-book.jpg',
   isbn: '978-0-123456-78-9',
-  numberOfPages: 320,
+  numberOfPages: 320, 
   inLanguage: 'English',
   publisher: {
     '@type': 'Organization',
