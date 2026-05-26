@@ -41,15 +41,15 @@ export default function ContactPage() {
     {
       icon: Mail,
       label: 'Email',
-      value: 'rev.vincentmboya@gmail.com',
-      href: 'mailto:rev.vincentmboya@gmail.com',
+      value: 'vincentmboya100@gmail.com',
+      href: 'mailto:vincentmboya100@gmail.com',
       color: 'bg-blue-50 text-blue-700'
     },
     {
       icon: Phone,
       label: 'Phone',
-      value: '+254 712 345 678',
-      href: 'tel:+254712345678',
+      value: '+254 722690576',
+      href: 'tel:+254722690576',
       color: 'bg-green-50 text-green-700'
     },
     {

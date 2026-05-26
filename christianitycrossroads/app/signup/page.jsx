@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { FcGoogle } from 'react-icons/fc'
 import { FaFacebookF } from 'react-icons/fa'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
-import { UserPlus, Heart, ArrowLeft, Camera, Sparkles } from 'lucide-react'
+import { UserPlus, ArrowLeft, Camera } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'react-hot-toast'
 import ImageToBase64 from '@/helpers/ImageToBase64.jsx'
@@ -75,7 +75,6 @@ export default function SignUp() {
       const responseData = await res.json()
 
       if (res.ok) {
-        // ✅ Store credentials for auto-fill in login
         sessionStorage.setItem('signupEmail', data.email)
         sessionStorage.setItem('signupPassword', data.password)
         sessionStorage.setItem('fromSignup', 'true')
@@ -85,7 +84,6 @@ export default function SignUp() {
           { icon: '✅', duration: 3000 }
         )
 
-        // Small delay for toast to show, then redirect
         setTimeout(() => {
           router.push('/login')
         }, 1500)
@@ -101,48 +99,27 @@ export default function SignUp() {
   }
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-indigo-50 dark:from-zinc-900 dark:via-zinc-900 dark:to-zinc-800 px-4 py-8">
-      <div className="w-full max-w-md">
+    <section className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center px-3 py-4 sm:px-4 sm:py-8">
+      <div className="w-full max-w-[420px]">
         
-        {/* Welcome Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 bg-gradient-to-r pt-20 from-rose-100 to-pink-100 dark:from-rose-900/20 dark:to-pink-900/10 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 flex items-center gap-3"
-        >
-          <div className="w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <Heart className="w-5 h-5 text-white fill-white" />
-          </div>
-          <div>
-            <h3 className="font-bold text-rose-800 dark:text-rose-200 text-sm">
-              Join Our Community
-            </h3>
-            <p className="text-xs text-rose-600 dark:text-rose-300">
-              Create an account to explore our sacred collection
-            </p>
-          </div>
-        </motion.div>
-
         {/* Main Card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl border border-gray-100 dark:border-zinc-800 overflow-hidden"
+          transition={{ duration: 0.3 }}
+          className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800 overflow-hidden"
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-rose-500 via-pink-500 to-indigo-500 p-8 text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50" />
-            
+          <div className="bg-zinc-900 dark:bg-zinc-950 px-5 pt-6 pb-8 sm:px-8 sm:pt-8 sm:pb-10 text-center relative">
             <motion.div
-              initial={{ scale: 0.5, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3, type: 'spring' }}
+              transition={{ delay: 0.15, duration: 0.3 }}
               className="relative z-10"
             >
               {/* Profile Photo Upload */}
-              <div className="w-28 h-28 mx-auto mb-4 relative">
-                <label className="w-full h-full cursor-pointer rounded-full border-4 border-white/30 overflow-hidden shadow-xl block relative group">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-3 sm:mb-4 relative">
+                <label className="w-full h-full cursor-pointer rounded-full border-2 border-zinc-600 overflow-hidden shadow-lg block relative group bg-zinc-800">
                   {photo ? (
                     <img
                       src={photo}
@@ -150,13 +127,13 @@ export default function SignUp() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-white/20 flex flex-col items-center justify-center text-white/80">
-                      <Camera className="w-8 h-8 mb-1" />
-                      <span className="text-xs">Add Photo</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400">
+                      <Camera className="w-6 h-6 sm:w-7 sm:h-7 mb-0.5" />
+                      <span className="text-[10px] sm:text-xs">Add Photo</span>
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Camera className="w-8 h-8 text-white" />
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Camera className="w-6 h-6 text-white" />
                   </div>
                   <input
                     type="file"
@@ -165,27 +142,24 @@ export default function SignUp() {
                     onChange={handleImageUpload}
                   />
                 </label>
-                <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center border-4 border-white dark:border-zinc-900">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
               </div>
               
-              <h1 className="text-2xl font-bold text-white mb-1">
+              <h1 className="text-xl sm:text-2xl font-semibold text-white mb-1">
                 Create Account
               </h1>
-              <p className="text-white/80 text-sm">
-                Begin your spiritual journey with us
+              <p className="text-zinc-400 text-xs sm:text-sm">
+                Sign up to get started
               </p>
             </motion.div>
           </div>
 
           {/* Form */}
-          <div className="p-6 sm:p-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="p-4 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               
               {/* Name Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Full Name
                 </label>
                 <input
@@ -194,13 +168,13 @@ export default function SignUp() {
                   onChange={handleOnChange}
                   placeholder="Enter your full name"
                   required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-gray-800 dark:text-white placeholder:text-gray-400"
+                  className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-sm text-gray-900 dark:text-white placeholder:text-gray-400"
                 />
               </div>
 
               {/* Email Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Email Address
                 </label>
                 <input
@@ -210,13 +184,13 @@ export default function SignUp() {
                   onChange={handleOnChange}
                   placeholder="you@example.com"
                   required
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-gray-800 dark:text-white placeholder:text-gray-400"
+                  className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-sm text-gray-900 dark:text-white placeholder:text-gray-400"
                 />
               </div>
 
               {/* Password Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Password
                 </label>
                 <div className="relative">
@@ -228,28 +202,28 @@ export default function SignUp() {
                     placeholder="Create a strong password"
                     required
                     minLength={6}
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-gray-800 dark:text-white placeholder:text-gray-400 pr-12"
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-sm text-gray-900 dark:text-white placeholder:text-gray-400 pr-10 sm:pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     {showPassword ? (
-                      <AiOutlineEyeInvisible size={20} />
+                      <AiOutlineEyeInvisible size={18} />
                     ) : (
-                      <AiOutlineEye size={20} />
+                      <AiOutlineEye size={18} />
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-[11px] text-gray-500 mt-1">
                   Must be at least 6 characters
                 </p>
               </div>
 
               {/* Confirm Password Field */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -260,15 +234,15 @@ export default function SignUp() {
                     onChange={handleOnChange}
                     placeholder="Confirm your password"
                     required
-                    className="w-full px-4 py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-gray-800 dark:text-white placeholder:text-gray-400 pr-12"
+                    className="w-full px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-500 focus:bg-white dark:focus:bg-zinc-800 transition-all text-sm text-gray-900 dark:text-white placeholder:text-gray-400 pr-10 sm:pr-12"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
                     {showConfirmPassword ? (
-                      <AiOutlineEyeInvisible size={20} />
+                      <AiOutlineEyeInvisible size={18} />
                     ) : (
                       <AiOutlineEye size={20} />
                     )}
@@ -278,65 +252,64 @@ export default function SignUp() {
 
               {/* Submit Button */}
               <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+                whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={isLoading || !data.name || !data.email || !data.password || !data.confirmPassword}
-                className="w-full py-4 mt-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white font-bold rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-3 sm:py-4 mt-2 bg-zinc-900 dark:bg-white dark:text-zinc-900 text-white font-semibold rounded-lg hover:bg-zinc-800 dark:hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
               >
                 {isLoading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white dark:border-zinc-400/30 dark:border-t-zinc-900 rounded-full animate-spin" />
                     Creating Account...
                   </>
                 ) : (
                   <>
-                    <UserPlus className="w-5 h-5" />
+                    <UserPlus className="w-4 h-4 sm:w-5 sm:h-5" />
                     Create Account
                   </>
                 )}
               </motion.button>
 
               {/* Divider */}
-              <div className="relative my-6">
+              <div className="relative my-4 sm:my-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-200 dark:border-zinc-700" />
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white dark:bg-zinc-900 text-gray-500">
-                    Or sign up with
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-3 bg-white dark:bg-zinc-900 text-gray-400">
+                    or continue with
                   </span>
                 </div>
               </div>
 
               {/* Social Login */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 dark:border-zinc-700 rounded-xl hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  <FcGoogle size={20} />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <FcGoogle size={18} />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                     Google
                   </span>
                 </button>
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 px-4 py-3 border border-gray-200 dark:border-zinc-700 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
                 >
-                  <FaFacebookF size={20} className="text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <FaFacebookF size={18} className="text-blue-600" />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                     Facebook
                   </span>
                 </button>
               </div>
 
               {/* Login Link */}
-              <p className="text-center text-sm text-gray-600 dark:text-gray-400 pt-2">
+              <p className="text-center text-xs sm:text-sm text-gray-500 dark:text-gray-400 pt-1 sm:pt-2">
                 Already have an account?{' '}
                 <Link
                   href="/login"
-                  className="font-semibold text-rose-600 hover:text-rose-700 transition-colors"
+                  className="font-medium text-zinc-900 dark:text-white hover:underline transition-colors"
                 >
                   Sign in
                 </Link>
@@ -346,12 +319,12 @@ export default function SignUp() {
         </motion.div>
 
         {/* Back to Home */}
-        <div className="mt-6 text-center">
+        <div className="mt-4 sm:mt-6 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Back to home
           </Link>
         </div>

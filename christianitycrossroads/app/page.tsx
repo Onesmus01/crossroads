@@ -5,6 +5,7 @@ import Hero from '@/components/Hero'
 import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
 import FeaturesPage  from '@/components/FeaturesPage'
+import  AnimateDriver  from '@/components/AnimateDriver'
 /* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
 const baseUrl = 'https://www.christianity-at-the-crossroads.com'
 
@@ -118,6 +119,15 @@ export default function Home() {
             variant="featured"
           />
         </div>
+        {/* <AnimateDriver variant="pulse" className="my-12" height={4} width="100%" center /> */}
+        <AnimateDriver
+  variant="shimmer"
+  color="custom"
+  customFrom="#ff6b6b"
+  customTo="#4ecdc4"
+  height="2px"
+  center
+/>
         <FeaturesPage />
       </main>
 
