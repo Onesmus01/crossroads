@@ -63,7 +63,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   }, [bookId]);
 
-  // Cleanup blob URL on unmount
   useEffect(() => {
     return () => {
       if (readerUrl && readerUrl.startsWith('blob:')) {
@@ -146,7 +145,9 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
-  // FIXED: Download via backend proxy
+  /**
+   * Handle download — supports both proxy (blob) and fallback (direct URL)
+   */
   const handleSecureDownload = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -166,35 +167,55 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `Download failed (${res.status})`);
+      // Check if response is JSON (fallback) or binary (proxy)
+      const contentType = res.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        // 🔥 FALLBACK: Backend returned JSON with direct URL
+        const data = await res.json();
+
+        if (!data.success || !data.fileUrl) {
+          throw new Error(data.message || 'Download failed');
+        }
+
+        console.log('[DOWNLOAD] Using fallback direct URL');
+
+        // Open in new tab — browser handles the download
+        window.open(data.fileUrl, '_blank');
+
+        toast.success('Opening download in new tab...', { 
+          id: toastId, 
+          icon: '📥',
+          duration: 4000
+        });
+      } else {
+        // ✅ PROXY: Backend sent the actual file bytes
+        const disposition = res.headers.get('content-disposition');
+        let fileName = `${book?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+        if (disposition) {
+          const match = disposition.match(/filename="?([^"]+)"?/);
+          if (match) fileName = match[1];
+        }
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        toast.success('Download started! Check your downloads folder.', { 
+          id: toastId, 
+          icon: '📥',
+          duration: 4000
+        });
       }
 
-      const disposition = res.headers.get('content-disposition');
-      let fileName = `${book?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-      if (disposition) {
-        const match = disposition.match(/filename="?([^"]+)"?/);
-        if (match) fileName = match[1];
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast.success('Download started! Check your downloads folder.', { 
-        id: toastId, 
-        icon: '📥',
-        duration: 4000
-      });
-
+      // Log download
       fetch(`${backendUrl}/book/${bookId}/download-log`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -213,8 +234,9 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
-  // FIXED: Read online — fetch PDF as blob, create object URL, embed it
-  // This avoids CORS issues because blob URLs are same-origin
+  /**
+   * Handle read online — fetches PDF bytes, creates blob URL
+   */
   const handleReadOnline = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -230,17 +252,32 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         throw new Error('Please log in to read');
       }
 
-      // Fetch PDF bytes from backend /view endpoint
       const res = await fetch(`${backendUrl}/book/${bookId}/view`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `Failed to load book (${res.status})`);
+      const contentType = res.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        // 🔥 FALLBACK: Backend returned JSON
+        const data = await res.json();
+
+        if (!data.success || !data.fileUrl) {
+          throw new Error(data.message || 'Failed to load book');
+        }
+
+        console.log('[READ] Using fallback direct URL');
+
+        // For direct Cloudinary URL, we can't embed due to CORS
+        // So open in new tab where browser's PDF viewer works
+        window.open(data.fileUrl, '_blank');
+
+        toast.success('Opening in new tab (PDF viewer)...', { id: toastId, icon: '📖' });
+        setIsOpeningReader(false);
+        return;
       }
 
-      // Convert to blob and create local URL (no CORS issues!)
+      // ✅ PROXY: Got PDF bytes — create blob URL
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
 
@@ -321,7 +358,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     );
   }
 
-  // Reader view with blob URL (no CORS issues)
+  // Reader view with blob URL
   if (readerUrl) {
     return (
       <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">

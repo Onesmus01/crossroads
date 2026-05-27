@@ -14,6 +14,7 @@ import isAdmin from "../middleware/adminAuth.js";
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import fs from "fs";
+import https from "https";
 
 const router = express.Router();
 
@@ -90,7 +91,25 @@ router.get('/:id/check-ownership', authToken, async (req, res) => {
 });
 
 /**
- * ✅ Secure Download — Fetches from Cloudinary and sends as buffer
+ * Helper: Fetch file from URL using https (more reliable than fetch for some hosts)
+ */
+function fetchFile(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+      const chunks = [];
+      res.on('data', chunk => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+}
+
+/**
+ * ✅ Secure Download — Proxies from Cloudinary with fallback
  */
 router.get('/:id/download', authToken, async (req, res) => {
   try {
@@ -127,19 +146,57 @@ router.get('/:id/download', authToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'File not available' });
     }
 
-    const fileRes = await fetch(book.fileUrl);
+    console.log(`[DOWNLOAD] Fetching from Cloudinary: ${book.fileUrl}`);
 
-    if (!fileRes.ok) {
-      throw new Error(`Cloudinary returned ${fileRes.status}`);
+    let buffer;
+    let fetchError;
+
+    // Try 1: Node.js native fetch
+    try {
+      const fileRes = await fetch(book.fileUrl, { 
+        headers: { 'User-Agent': 'Mozilla/5.0 (Node.js Backend)' }
+      });
+      if (fileRes.ok) {
+        buffer = Buffer.from(await fileRes.arrayBuffer());
+        console.log(`[DOWNLOAD] fetch() success — ${buffer.length} bytes`);
+      } else {
+        fetchError = `fetch() got HTTP ${fileRes.status}`;
+        console.warn(`[DOWNLOAD] ${fetchError}`);
+      }
+    } catch (err) {
+      fetchError = `fetch() error: ${err.message}`;
+      console.warn(`[DOWNLOAD] ${fetchError}`);
     }
 
-    const buffer = Buffer.from(await fileRes.arrayBuffer());
-    const safeFileName = `${book.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+    // Try 2: https module fallback
+    if (!buffer) {
+      try {
+        buffer = await fetchFile(book.fileUrl);
+        console.log(`[DOWNLOAD] https.get success — ${buffer.length} bytes`);
+      } catch (err) {
+        console.warn(`[DOWNLOAD] https.get error: ${err.message}`);
+      }
+    }
 
-    res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Length', buffer.length);
-    res.send(buffer);
+    // If we got the file, send it
+    if (buffer && buffer.length > 0) {
+      const safeFileName = `${book.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', buffer.length);
+      return res.send(buffer);
+    }
+
+    // 🔥 FALLBACK: Return direct URL to frontend
+    // Browser can download from Cloudinary directly (no CORS for navigation)
+    console.log(`[DOWNLOAD] Proxy failed, returning direct URL fallback`);
+    return res.json({
+      success: true,
+      fileUrl: book.fileUrl,
+      fileName: `${book.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+      fallback: true,
+      message: 'Use direct link to download',
+    });
 
   } catch (err) {
     console.error('Download error:', err);
@@ -148,8 +205,7 @@ router.get('/:id/download', authToken, async (req, res) => {
 });
 
 /**
- * ✅ Read Online — Serves PDF inline (for browser embed/iframe)
- * Same as download but with inline disposition and no filename forcing
+ * ✅ Read Online / View — Serves PDF inline with fallback
  */
 router.get('/:id/view', authToken, async (req, res) => {
   try {
@@ -186,19 +242,50 @@ router.get('/:id/view', authToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'File not available' });
     }
 
-    const fileRes = await fetch(book.fileUrl);
+    console.log(`[VIEW] Fetching from Cloudinary: ${book.fileUrl}`);
 
-    if (!fileRes.ok) {
-      throw new Error(`Cloudinary returned ${fileRes.status}`);
+    let buffer;
+
+    // Try 1: fetch
+    try {
+      const fileRes = await fetch(book.fileUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Node.js Backend)' }
+      });
+      if (fileRes.ok) {
+        buffer = Buffer.from(await fileRes.arrayBuffer());
+        console.log(`[VIEW] fetch() success — ${buffer.length} bytes`);
+      } else {
+        console.warn(`[VIEW] fetch() got HTTP ${fileRes.status}`);
+      }
+    } catch (err) {
+      console.warn(`[VIEW] fetch() error: ${err.message}`);
     }
 
-    const buffer = Buffer.from(await fileRes.arrayBuffer());
+    // Try 2: https.get
+    if (!buffer) {
+      try {
+        buffer = await fetchFile(book.fileUrl);
+        console.log(`[VIEW] https.get success — ${buffer.length} bytes`);
+      } catch (err) {
+        console.warn(`[VIEW] https.get error: ${err.message}`);
+      }
+    }
 
-    // inline = browser shows it, doesn't force download
-    res.setHeader('Content-Disposition', 'inline');
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Length', buffer.length);
-    res.send(buffer);
+    // If we got the file, send it inline
+    if (buffer && buffer.length > 0) {
+      res.setHeader('Content-Disposition', 'inline');
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Length', buffer.length);
+      return res.send(buffer);
+    }
+
+    // 🔥 FALLBACK: Return direct URL — frontend will handle it
+    console.log(`[VIEW] Proxy failed, returning direct URL fallback`);
+    return res.json({
+      success: true,
+      fileUrl: book.fileUrl,
+      fallback: true,
+    });
 
   } catch (err) {
     console.error('View error:', err);
@@ -207,7 +294,7 @@ router.get('/:id/view', authToken, async (req, res) => {
 });
 
 /**
- * ✅ Read Online — Returns JSON with fileUrl (for direct access fallback)
+ * ✅ Read Online — Returns JSON with fileUrl (legacy endpoint)
  */
 router.get('/:id/read', authToken, async (req, res) => {
   try {
