@@ -121,13 +121,13 @@ export default function Home() {
         </div>
         {/* <AnimateDriver variant="pulse" className="my-12" height={4} width="100%" center /> */}
         <AnimateDriver
-  variant="shimmer"
-  color="custom"
-  customFrom="#ff6b6b"
-  customTo="#4ecdc4"
-  height="2px"
-  center
-/>
+          variant="shimmer"
+          color="custom"
+          customFrom="#ff6b6b"
+          customTo="#4ecdc4"
+          height="2px"
+          center
+        />
         <FeaturesPage />
       </main>
 

@@ -26,17 +26,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser())
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-app.use(helmet())
+app.use(helmet({
+  contentSecurityPolicy: false
+}));
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://christianity-at-the-crossroads.com",
+  "https://www.christianity-at-the-crossroads.com"
+];
+
 app.use(cors({
-    origin: ["http://localhost:3000",
-            "https://christianitycrossroads.onrender.com",
-            "https://christianity-at-the-crossroads.com",
-            "https://www.christianity-at-the-crossroads.com"
-],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-}))
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.get("/api", (req, res) => {
   res.json({ message: "API is running 🚀" });
