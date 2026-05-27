@@ -47,11 +47,13 @@ const MemoBookCard = memo(function MemoBookCard({
   book, 
   isNewFlag, 
   isBestsellerFlag, 
+  isUnlockedFlag,
   onPay 
 }: { 
   book: Book; 
   isNewFlag: boolean; 
   isBestsellerFlag: boolean; 
+  isUnlockedFlag: boolean;
   onPay: (book: any) => void;
 }) {
   return (
@@ -66,7 +68,7 @@ const MemoBookCard = memo(function MemoBookCard({
       color="amber"
       isNew={isNewFlag}
       isBestseller={isBestsellerFlag}
-      isUnlocked={false}
+      isUnlocked={isUnlockedFlag}
       onPay={onPay}
     />
   );
@@ -107,12 +109,13 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function BooksPage() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
-  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<<HTMLInputElement>(null);
   
   // Data state
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [paidBookIds, setPaidBookIds] = useState<<Set<string>>(new Set());
   
   // UI state
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,7 +125,7 @@ export default function BooksPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Fetch books once
+  // Fetch books once + payment status for logged-in users
   useEffect(() => {
   const controller = new AbortController();
   
@@ -160,6 +163,43 @@ export default function BooksPage() {
       }
 
       setBooks(booksArray);
+
+      // ─── Fetch user's successful payments ─────────────────
+      if (token) {
+        try {
+          // ⚠️ Adjust this endpoint to match your backend route
+          const paymentUrl = `${API_URL}/payment/user-payments`;
+          const paymentRes = await fetch(paymentUrl, {
+            signal: controller.signal,
+            credentials: 'include',
+            headers: { 
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+          });
+
+          if (paymentRes.ok) {
+            const paymentData = await paymentRes.json();
+            const payments = paymentData?.payments || paymentData || [];
+            const successfulBookIds = new Set(
+              payments
+                .filter((p: any) => p.status === 'success')
+                .map((p: any) => {
+                  // Handle both populated { _id: '...' } and plain string ObjectIds
+                  if (typeof p.book === 'string') return p.book;
+                  return p.book?._id?.toString?.() || p.book?.toString?.();
+                })
+                .filter(Boolean)
+            );
+            setPaidBookIds(successfulBookIds);
+            console.log('💰 Paid books loaded:', successfulBookIds.size);
+          }
+        } catch (paymentErr: any) {
+          if (paymentErr.name === 'AbortError') return;
+          console.error('❌ Payment fetch error:', paymentErr);
+          // Non-critical: don't block book display
+        }
+      }
 
     } catch (err: any) {
       if (err.name === 'AbortError') return;
@@ -560,6 +600,7 @@ export default function BooksPage() {
                     book={book}
                     isNewFlag={isNew(book.createdAt)}
                     isBestsellerFlag={book.isBestseller || book.rating >= 4.5}
+                    isUnlockedFlag={paidBookIds.has(book._id)}
                     onPay={handlePay}
                   />
                 </motion.div>
