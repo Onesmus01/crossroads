@@ -11,7 +11,7 @@ import {
   TrendingUp,
   Library,
   SearchX,
-  Grid3X3,
+  
   LayoutList,
   ChevronRight,
   Filter
@@ -322,7 +322,7 @@ export function BooksSection({
               transition={{ delay: 0.3 }}
               className="flex items-center gap-1.5 sm:gap-2 bg-muted/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1 sm:p-1.5 border border-border/50 shadow-sm"
             >
-              <button
+              {/* <button
                 onClick={() => setViewMode('grid')}
                 className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300 ${
                   viewMode === 'grid' 
@@ -343,7 +343,7 @@ export function BooksSection({
               >
                 <LayoutList className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">List</span>
-              </button>
+              </button> */}
             </motion.div>
           </div>
         </motion.div>

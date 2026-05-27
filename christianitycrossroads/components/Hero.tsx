@@ -53,6 +53,7 @@ function Hero() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-1 sm:pt-2">
             <button
+            onClick={()=> window.location.href = '/books'}  // Navigate to collections page
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className="relative w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg bg-primary text-primary-foreground text-sm sm:text-base font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 active:scale-95"

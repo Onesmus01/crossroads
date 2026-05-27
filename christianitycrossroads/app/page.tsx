@@ -6,6 +6,7 @@ import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
 import FeaturesPage  from '@/components/FeaturesPage'
 import  AnimateDriver  from '@/components/AnimateDriver'
+import Conveyor from '@/components/Conveyor'
 /* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
 const baseUrl = 'https://www.christianity-at-the-crossroads.com'
 
@@ -111,8 +112,9 @@ export default function Home() {
 
       <main className="flex-1">
         <Hero />
+        <Conveyor speed={0.6} bookHeight={30} className="my-2" />
 
-        <div className="-mt-2 sm:-mt-4">
+        <div className="-mt-8 sm:-mt-14 lg:-mt-20">
           <BooksSection
             title="Featured Christian Books"
             description="Devotionals and teachings for spiritual growth"
