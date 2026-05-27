@@ -109,13 +109,13 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function BooksPage() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
-  const searchInputRef = useRef<<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   
   // Data state
-  const [books, setBooks] = useState<<Book[]>([]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [paidBookIds, setPaidBookIds] = useState<<Set<string>>(new Set());
+  const [paidBookIds, setPaidBookIds] = useState<Set<string>>(new Set());
   
   // UI state
   const [searchQuery, setSearchQuery] = useState('');
