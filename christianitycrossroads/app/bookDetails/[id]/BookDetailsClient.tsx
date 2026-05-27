@@ -63,6 +63,15 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   }, [bookId]);
 
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (readerUrl && readerUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(readerUrl);
+      }
+    };
+  }, [readerUrl]);
+
   const verifyOwnership = async () => {
     try {
       setCheckingOwnership(true);
@@ -137,8 +146,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
-  // FIXED: Download via backend proxy (streams file through your server)
-  // This avoids CORS issues because the browser only talks to YOUR backend
+  // FIXED: Download via backend proxy
   const handleSecureDownload = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -154,7 +162,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         throw new Error('Please log in to download');
       }
 
-      // 🔥 Fetch file as blob from YOUR backend (not Cloudinary directly)
       const res = await fetch(`${backendUrl}/book/${bookId}/download`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -164,7 +171,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         throw new Error(errData.message || `Download failed (${res.status})`);
       }
 
-      // Get filename from Content-Disposition header, fallback to book title
       const disposition = res.headers.get('content-disposition');
       let fileName = `${book?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
       if (disposition) {
@@ -189,7 +195,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         duration: 4000
       });
 
-      // Log download (fire and forget)
       fetch(`${backendUrl}/book/${bookId}/download-log`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -208,7 +213,8 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
-  // FIXED: Read online — get direct Cloudinary URL from backend, then embed it
+  // FIXED: Read online — fetch PDF as blob, create object URL, embed it
+  // This avoids CORS issues because blob URLs are same-origin
   const handleReadOnline = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -216,7 +222,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
 
     setIsOpeningReader(true);
-    const toastId = toast.loading('Opening book...');
+    const toastId = toast.loading('Loading book...');
 
     try {
       const token = getAuthToken();
@@ -224,19 +230,22 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         throw new Error('Please log in to read');
       }
 
-      const res = await fetch(`${backendUrl}/book/${bookId}/read`, {
+      // Fetch PDF bytes from backend /view endpoint
+      const res = await fetch(`${backendUrl}/book/${bookId}/view`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      const data = await res.json();
-      console.log('Read online response:', data);
-
-      if (!res.ok || !data.success || !data.fileUrl) {
-        throw new Error(data.message || 'Unable to access book');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Failed to load book (${res.status})`);
       }
 
-      setReaderUrl(data.fileUrl);
-      toast.success('Opening book reader...', { id: toastId, icon: '📖' });
+      // Convert to blob and create local URL (no CORS issues!)
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      setReaderUrl(blobUrl);
+      toast.success('Book loaded!', { id: toastId, icon: '📖' });
 
     } catch (error: any) {
       console.error('Read online error:', error);
@@ -259,7 +268,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       icon: '🎉'
     });
 
-    await verifyOwnership(); // Re-check from server to confirm
+    await verifyOwnership();
     await fetchBookDetails();
   };
 
@@ -312,6 +321,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     );
   }
 
+  // Reader view with blob URL (no CORS issues)
   if (readerUrl) {
     return (
       <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
@@ -319,6 +329,9 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => {
+                if (readerUrl.startsWith('blob:')) {
+                  URL.revokeObjectURL(readerUrl);
+                }
                 setReaderUrl(null);
                 setIsOpeningReader(false);
               }} 
@@ -332,14 +345,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => window.open(readerUrl, '_blank')}
-              className="flex items-center gap-2 px-3 py-2 bg-zinc-700 text-white rounded-lg text-sm font-medium hover:bg-zinc-600 transition-colors"
-              title="Open in new tab"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span className="hidden sm:inline">Open</span>
-            </button>
             <button 
               onClick={handleSecureDownload}
               disabled={isDownloading}

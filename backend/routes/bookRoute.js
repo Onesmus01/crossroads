@@ -14,7 +14,6 @@ import isAdmin from "../middleware/adminAuth.js";
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import fs from "fs";
-import { Readable } from "stream";
 
 const router = express.Router();
 
@@ -34,7 +33,6 @@ const upload = multer({ storage });
 router.get("/all-books", getAllBooks);
 router.get("/:id", getBookById);
 
-// Add book (PDF + Cover upload)
 router.post(
   "/add",
   authToken,
@@ -46,7 +44,6 @@ router.post(
   addBook
 );
 
-// Update book (optional new files)
 router.put(
   "/update/:id",
   authToken,
@@ -93,9 +90,7 @@ router.get('/:id/check-ownership', authToken, async (req, res) => {
 });
 
 /**
- * ✅ Secure Download (PROXIED — streams file from Cloudinary through backend)
- * This fixes CORS/download issues because the browser talks to YOUR server,
- * and your server talks to Cloudinary server-to-server.
+ * ✅ Secure Download — Fetches from Cloudinary and sends as buffer
  */
 router.get('/:id/download', authToken, async (req, res) => {
   try {
@@ -132,39 +127,87 @@ router.get('/:id/download', authToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'File not available' });
     }
 
-    // 🔥 PROXY: Fetch file from Cloudinary server-to-server
     const fileRes = await fetch(book.fileUrl);
 
     if (!fileRes.ok) {
-      throw new Error(`Cloudinary fetch failed: ${fileRes.status}`);
+      throw new Error(`Cloudinary returned ${fileRes.status}`);
     }
 
+    const buffer = Buffer.from(await fileRes.arrayBuffer());
     const safeFileName = `${book.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
 
-    // Set headers so browser downloads instead of opening
     res.setHeader('Content-Disposition', `attachment; filename="${safeFileName}"`);
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Length', fileRes.headers.get('content-length') || '');
-
-    // Stream the file body to the client
-    if (fileRes.body) {
-      Readable.fromWeb(fileRes.body).pipe(res);
-    } else {
-      // Fallback for older Node versions
-      const buffer = await fileRes.arrayBuffer();
-      res.send(Buffer.from(buffer));
-    }
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
 
   } catch (err) {
     console.error('Download error:', err);
-    res.status(500).json({ success: false, message: 'Download error' });
+    res.status(500).json({ success: false, message: 'Download error: ' + err.message });
   }
 });
 
 /**
- * ✅ Read Online — returns direct Cloudinary URL
- * The browser can load this in <embed> or <iframe> without CORS issues
- * because it's a direct resource load, not a fetch() call.
+ * ✅ Read Online — Serves PDF inline (for browser embed/iframe)
+ * Same as download but with inline disposition and no filename forcing
+ */
+router.get('/:id/view', authToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid book ID' });
+    }
+
+    const book = await Book.findById(id);
+    if (!book) {
+      return res.status(404).json({ success: false, message: 'Book not found' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+
+    const isPurchased = user.purchasedBooks?.some(
+      (bookId) => bookId.toString() === id
+    );
+
+    const isFree = book.price === 0;
+
+    if (!isPurchased && !isFree) {
+      return res.status(403).json({
+        success: false,
+        message: 'Purchase required to read this book',
+      });
+    }
+
+    if (!book.fileUrl) {
+      return res.status(404).json({ success: false, message: 'File not available' });
+    }
+
+    const fileRes = await fetch(book.fileUrl);
+
+    if (!fileRes.ok) {
+      throw new Error(`Cloudinary returned ${fileRes.status}`);
+    }
+
+    const buffer = Buffer.from(await fileRes.arrayBuffer());
+
+    // inline = browser shows it, doesn't force download
+    res.setHeader('Content-Disposition', 'inline');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
+
+  } catch (err) {
+    console.error('View error:', err);
+    res.status(500).json({ success: false, message: 'View error: ' + err.message });
+  }
+});
+
+/**
+ * ✅ Read Online — Returns JSON with fileUrl (for direct access fallback)
  */
 router.get('/:id/read', authToken, async (req, res) => {
   try {
@@ -204,7 +247,6 @@ router.get('/:id/read', authToken, async (req, res) => {
       });
     }
 
-    // Return direct URL — browser can load this in embed/iframe
     return res.json({
       success: true,
       fileUrl: book.fileUrl,
@@ -217,7 +259,7 @@ router.get('/:id/read', authToken, async (req, res) => {
 });
 
 /**
- * ✅ Download Logging (Analytics)
+ * ✅ Download Logging
  */
 router.post('/:id/download-log', authToken, async (req, res) => {
   try {
