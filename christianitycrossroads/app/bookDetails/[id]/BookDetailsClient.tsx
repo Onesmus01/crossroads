@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Star, Download, BookOpen, Share2, Heart, 
   Clock, Globe, FileText, Loader2, Lock, Smartphone, 
-  Shield, AlertCircle, ChevronRight, FileDown, CheckCircle
+  Shield, AlertCircle, ChevronRight, FileDown, CheckCircle, ExternalLink
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { MpesaPaymentModal } from '@/components/MpesaPaymentModal';
@@ -31,20 +31,13 @@ interface Book {
   fileSize: string;
 }
 
-interface DownloadResponse {
-  success: boolean;
-  fileUrl?: string;
-  fileName?: string;
-  message?: string;
-}
-
 interface BookDetailsClientProps {
   bookId: string;
 }
 
 export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const router = useRouter();
-  
+
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
@@ -74,7 +67,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     try {
       setCheckingOwnership(true);
       const token = getAuthToken();
-      
+
       if (!token) {
         const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
         setIsPurchased(purchasedBooks.includes(bookId));
@@ -88,7 +81,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       if (res.ok) {
         const data = await res.json();
         setIsPurchased(data.isPurchased || data.owned);
-        
+
         if (data.isPurchased) {
           const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
           if (!purchasedBooks.includes(bookId)) {
@@ -110,11 +103,11 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     try {
       setLoading(true);
       const res = await fetch(`${backendUrl}/book/${bookId}`);
-      
+
       if (!res.ok) throw new Error('Failed to fetch book');
-      
+
       const data = await res.json();
-      
+
       if (data.book) {
         setBook({
           id: data.book._id || data.book.id || bookId,
@@ -144,6 +137,8 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
+  // FIXED: Download via backend proxy (streams file through your server)
+  // This avoids CORS issues because the browser only talks to YOUR backend
   const handleSecureDownload = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -155,48 +150,47 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
     try {
       const token = getAuthToken();
-      
+      if (!token) {
+        throw new Error('Please log in to download');
+      }
+
+      // 🔥 Fetch file as blob from YOUR backend (not Cloudinary directly)
       const res = await fetch(`${backendUrl}/book/${bookId}/download`, {
-        credentials: 'include',
-        headers: { 
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      const data: DownloadResponse = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Download unauthorized');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Download failed (${res.status})`);
       }
 
-      if (!data.fileUrl) {
-        throw new Error('Download link not available');
+      // Get filename from Content-Disposition header, fallback to book title
+      const disposition = res.headers.get('content-disposition');
+      let fileName = `${book?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+      if (disposition) {
+        const match = disposition.match(/filename="?([^"]+)"?/);
+        if (match) fileName = match[1];
       }
 
-      const fileRes = await fetch(data.fileUrl);
-      
-      if (!fileRes.ok) throw new Error('Failed to fetch file from storage');
-
-      const blob = await fileRes.blob();
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
-      link.download = data.fileName || `${book?.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
       window.URL.revokeObjectURL(url);
-      
+
       toast.success('Download started! Check your downloads folder.', { 
         id: toastId, 
         icon: '📥',
         duration: 4000
       });
 
-      await fetch(`${backendUrl}/book/${bookId}/download-log`, {
+      // Log download (fire and forget)
+      fetch(`${backendUrl}/book/${bookId}/download-log`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       }).catch(() => {});
@@ -204,7 +198,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     } catch (error: any) {
       console.error('Download error:', error);
       toast.error(error.message || 'Download failed. Try again.', { id: toastId });
-      
+
       if (error.message?.includes('unauthorized') || error.message?.includes('purchase')) {
         setIsPurchased(false);
         setShowPaymentModal(true);
@@ -214,6 +208,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
+  // FIXED: Read online — get direct Cloudinary URL from backend, then embed it
   const handleReadOnline = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -221,49 +216,50 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
 
     setIsOpeningReader(true);
-    
+    const toastId = toast.loading('Opening book...');
+
     try {
       const token = getAuthToken();
-      
-      const res = await fetch(`${backendUrl}/book/${bookId}/download`, {
-        headers: { 'Authorization': token ? `Bearer ${token}` : '' }
+      if (!token) {
+        throw new Error('Please log in to read');
+      }
+
+      const res = await fetch(`${backendUrl}/book/${bookId}/read`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      const data: DownloadResponse = await res.json();
+      const data = await res.json();
+      console.log('Read online response:', data);
 
-      if (!data.success || !data.fileUrl) {
-        throw new Error('Unable to access book');
+      if (!res.ok || !data.success || !data.fileUrl) {
+        throw new Error(data.message || 'Unable to access book');
       }
 
-      if (data.fileUrl.endsWith('.pdf')) {
-        const viewerUrl = `https://docs.google.com/gview?embedded=1&url=${encodeURIComponent(data.fileUrl)}`;
-        setReaderUrl(viewerUrl);
-      } else {
-        window.open(data.fileUrl, '_blank');
-      }
-      
-      toast.success('Opening book reader...', { icon: '📖' });
-      
+      setReaderUrl(data.fileUrl);
+      toast.success('Opening book reader...', { id: toastId, icon: '📖' });
+
     } catch (error: any) {
-      toast.error(error.message || 'Failed to open book');
+      console.error('Read online error:', error);
+      toast.error(error.message || 'Failed to open book', { id: toastId });
       setIsOpeningReader(false);
     }
   };
 
   const handlePaymentSuccess = async () => {
     setIsPurchased(true);
-    
+
     const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
     if (!purchasedBooks.includes(bookId)) {
       purchasedBooks.push(bookId);
       localStorage.setItem('purchasedBooks', JSON.stringify(purchasedBooks));
     }
-    
+
     toast.success('Payment successful! You can now download or read the book.', { 
       duration: 5000,
       icon: '🎉'
     });
-    
+
+    await verifyOwnership(); // Re-check from server to confirm
     await fetchBookDetails();
   };
 
@@ -322,7 +318,10 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         <div className="flex items-center justify-between px-4 py-3 bg-zinc-800 border-b border-zinc-700">
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => setReaderUrl(null)} 
+              onClick={() => {
+                setReaderUrl(null);
+                setIsOpeningReader(false);
+              }} 
               className="p-2 hover:bg-zinc-700 rounded-full transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
@@ -334,18 +333,27 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
           </div>
           <div className="flex items-center gap-2">
             <button 
+              onClick={() => window.open(readerUrl, '_blank')}
+              className="flex items-center gap-2 px-3 py-2 bg-zinc-700 text-white rounded-lg text-sm font-medium hover:bg-zinc-600 transition-colors"
+              title="Open in new tab"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">Open</span>
+            </button>
+            <button 
               onClick={handleSecureDownload}
               disabled={isDownloading}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
             >
               {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Download
+              <span className="hidden sm:inline">Download</span>
             </button>
           </div>
         </div>
         <div className="flex-1 relative">
-          <iframe 
+          <embed 
             src={readerUrl} 
+            type="application/pdf" 
             className="w-full h-full border-0"
             title={book.title}
           />
@@ -356,7 +364,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      {/* Navigation */}
       <nav className="sticky top-0 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -367,7 +374,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
               <ArrowLeft className="w-5 h-5" />
               <span className="hidden sm:inline font-medium">Back</span>
             </button>
-            
+
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleShare} 
@@ -390,8 +397,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
-          
-          {/* Cover Section */}
+
           <div className="lg:col-span-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }} 
@@ -410,9 +416,9 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
                     <span className="text-8xl font-bold text-zinc-400">{book.title.charAt(0)}</span>
                   </div>
                 )}
-                
+
                 {!isPurchased && book.price > 0 && (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur- flex flex-col items-center justify-center text-white">
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white">
                     <Lock className="w-12 h-12 mb-3 opacity-80" />
                     <p className="text-sm font-medium opacity-80">Purchase to unlock</p>
                   </div>
@@ -440,7 +446,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
             </motion.div>
           </div>
 
-          {/* Details Section */}
           <div className="lg:col-span-8">
             <motion.div 
               initial={{ opacity: 0, y: 20 }} 
@@ -568,7 +573,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
                     <p className="text-lg leading-relaxed text-zinc-600 dark:text-zinc-300 mb-8">
                       {book.description}
                     </p>
-                    
+
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <StatCard icon={BookOpen} label="Pages" value={book.pages} />
                       <StatCard icon={Globe} label="Language" value={book.language} />
@@ -622,7 +627,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   );
 }
 
-// Sub-components
 function ActionButtons({ 
   isPurchased, 
   isFree, 

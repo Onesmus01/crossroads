@@ -1,6 +1,7 @@
 import Book from "../models/bookModel.js";
 import mongoose from "mongoose";
 import cloudinary from 'cloudinary';
+import Payment from "../models/paymentModel.js";
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -204,3 +205,111 @@ export const deleteBook = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const downloadBook = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const bookId = req.params.id;
+
+    // Find purchase
+    const purchase = await Payment.findOne({
+      userId,
+      bookId,
+      paymentStatus: 'success'
+    });
+
+    if (!purchase) {
+      return res.status(403).json({
+        success: false,
+        message: 'Purchase required'
+      });
+    }
+
+    // Find book
+    const book = await Book.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({
+        success: false,
+        message: 'Book not found'
+      });
+    }
+
+    if (!book.fileUrl) {
+      return res.status(404).json({
+        success: false,
+        message: 'Book file missing'
+      });
+    }
+
+    return res.json({
+      success: true,
+      fileUrl: book.fileUrl,
+      fileName: `${book.title}.pdf`
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+export const readBookOnline = async (req, res) => {
+  try {
+    const userId = req.user.id
+    const bookId = req.params.id
+
+    // Check payment
+    const purchase = await Payment.findOne({
+      userId,
+      bookId,
+      paymentStatus: 'success'
+    })
+
+    if (!purchase) {
+      return res.status(403).json({
+        success: false,
+        message: 'Purchase required'
+      })
+    }
+
+    const book = await Book.findById(bookId)
+
+    if (!book || !book.fileUrl) {
+      return res.status(404).json({
+        success: false,
+        message: 'Book not found'
+      })
+    }
+
+    // Stream PDF (no download headers)
+    const response = await axios({
+      method: 'GET',
+      url: book.fileUrl,
+      responseType: 'stream'
+    })
+
+    res.setHeader('Content-Type', 'application/pdf')
+
+    // IMPORTANT: inline instead of attachment
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${book.title}.pdf"`
+    )
+
+    response.data.pipe(res)
+
+  } catch (error) {
+    console.log(error)
+
+    return res.status(500).json({
+      success: false,
+      message: 'Server error'
+    })
+  }
+}
