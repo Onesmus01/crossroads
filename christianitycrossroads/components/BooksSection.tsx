@@ -79,6 +79,7 @@ export function BooksSection({
   const [error, setError] = useState<string | null>(null);
   const [hoveredBook, setHoveredBook] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(layout);
+  const [paidBookIds, setPaidBookIds] = useState<Set<string>>(new Set());
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080/api';
 
@@ -91,7 +92,15 @@ export function BooksSection({
       setLoading(true);
       setError(null);
 
-      const res = await fetch(`${backendUrl}/book/all-books`);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') || '' : '';
+
+      const res = await fetch(`${backendUrl}/book/all-books`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || `Failed (${res.status})`);
@@ -124,7 +133,50 @@ export function BooksSection({
       else if (filter === 'premium') filtered = formattedBooks.filter(b => b.price > 0);
 
       setBooks(filtered);
-      
+
+      // ─── Ownership check (same logic as BooksPage) ─────────
+      const paidIds = new Set<string>();
+
+      // 1️⃣ localStorage (instant)
+      try {
+        const stored = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
+        if (Array.isArray(stored)) stored.forEach((id: string) => paidIds.add(id));
+      } catch { /* ignore */ }
+
+      // 2️⃣ Backend flag inside book objects
+      data.books.forEach((b: any) => {
+        if (b.isPurchased || b.isOwned || b.hasAccess) {
+          paidIds.add(b._id || b.id);
+        }
+      });
+
+      // 3️⃣ Payment history (async verification)
+      if (token) {
+        try {
+          const paymentRes = await fetch(`${backendUrl}/payment/user-payments`, {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            }
+          });
+          if (paymentRes.ok) {
+            const paymentData = await paymentRes.json();
+            const payments = paymentData?.payments || paymentData || [];
+            payments
+              .filter((p: any) => p.status === 'success')
+              .forEach((p: any) => {
+                const bookId = typeof p.book === 'string'
+                  ? p.book
+                  : (p.book?._id?.toString?.() || p.book?.toString?.());
+                if (bookId) paidIds.add(bookId);
+              });
+          }
+        } catch (e) { /* non-critical */ }
+      }
+
+      setPaidBookIds(paidIds);
+
     } catch (err: any) {
       setError(err.message);
       toast.error(err.message);
@@ -372,6 +424,7 @@ export function BooksSection({
                 <BookCard 
                   {...book} 
                   isHovered={hoveredBook === book.id}
+                  isUnlocked={paidBookIds.has(book.id)}
                 />
               </motion.div>
             ))}

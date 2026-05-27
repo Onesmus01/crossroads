@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Star, Heart, Lock, Download, Play, Sparkles, TrendingUp } from 'lucide-react';
+import { Star, Heart, Lock, Download, Play, Sparkles, TrendingUp, CheckCircle } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -185,7 +185,7 @@ export function BookCard({
         <div className="mt-auto pt-2 sm:pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
           <div className="flex flex-col">
             {isOwned ? (
-              <span className="text-xs sm:text-sm font-bold text-emerald-600">Owned</span>
+              <span className="text-xs sm:text-sm font-bold text-emerald-600">Paid</span>
             ) : (
               <span className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-white">
                 {isFree ? 'Free' : `KES ${price}`}
@@ -200,7 +200,7 @@ export function BookCard({
             onClick={handleAction}
             aria-label={
               isOwned 
-                ? `Read ${title}` 
+                ? `${title} is paid` 
                 : isFree 
                   ? `Download ${title}` 
                   : `Unlock ${title}`
@@ -215,8 +215,8 @@ export function BookCard({
           >
             {isOwned ? (
               <>
-                <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" aria-hidden="true" />
-                <span>Read</span>
+                <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" aria-hidden="true" />
+                <span>Paid</span>
               </>
             ) : isFree ? (
               <>

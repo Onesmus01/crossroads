@@ -125,94 +125,114 @@ export default function BooksPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Fetch books once + payment status for logged-in users
+  // Fetch books + ownership status (mirrors BookDetails logic)
   useEffect(() => {
-  const controller = new AbortController();
-  
-  const fetchBooks = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    const controller = new AbortController();
+    
+    const fetchBooks = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const token = localStorage.getItem('token') || '';
-      const url = `${API_URL}/book/all-books`;
-      
-      console.log('🌐 Fetching:', url);
+        const token = localStorage.getItem('token') || '';
+        const url = `${API_URL}/book/all-books`;
+        
+        console.log('🌐 Fetching:', url);
 
-      const res = await fetch(url, {
-        signal: controller.signal,
-        credentials: 'include',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-      });
+        const res = await fetch(url, {
+          signal: controller.signal,
+          credentials: 'include',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          },
+        });
 
-      const data = await res.json();
-      console.log('📦 Response:', data);
+        const data = await res.json();
+        console.log('📦 Response:', data);
 
-      if (!res.ok) {
-        throw new Error(data?.message || `HTTP ${res.status}`);
-      }
+        if (!res.ok) {
+          throw new Error(data?.message || `HTTP ${res.status}`);
+        }
 
-      // ✅ FIXED: Accept both { success: true, books: [] } and { books: [] }
-      const booksArray = data?.books || data;
-      
-      if (!Array.isArray(booksArray)) {
-        throw new Error('Invalid response: expected array of books');
-      }
+        // ✅ FIXED: Accept both { success: true, books: [] } and { books: [] }
+        const booksArray = data?.books || data;
+        
+        if (!Array.isArray(booksArray)) {
+          throw new Error('Invalid response: expected array of books');
+        }
 
-      setBooks(booksArray);
+        setBooks(booksArray);
 
-      // ─── Fetch user's successful payments ─────────────────
-      if (token) {
+        // ═══════════════════════════════════════════════════
+        //  Ownership check — same sources as BookDetailsClient
+        // ═══════════════════════════════════════════════════
+        const paidIds = new Set<string>();
+
+        // 1️⃣ LocalStorage (instant, sync) — BookDetails writes here after M-Pesa
         try {
-          // ⚠️ Adjust this endpoint to match your backend route
-          const paymentUrl = `${API_URL}/payment/user-payments`;
-          const paymentRes = await fetch(paymentUrl, {
-            signal: controller.signal,
-            credentials: 'include',
-            headers: { 
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
-          });
+          const stored = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
+          if (Array.isArray(stored)) {
+            stored.forEach((id: string) => paidIds.add(id));
+          }
+        } catch {
+          // ignore parse errors
+        }
 
-          if (paymentRes.ok) {
-            const paymentData = await paymentRes.json();
-            const payments = paymentData?.payments || paymentData || [];
-            const successfulBookIds = new Set(
+        // 2️⃣ Backend flag inside book objects (if your API sends isPurchased / isOwned)
+        booksArray.forEach((b: any) => {
+          if (b.isPurchased || b.isOwned || b.hasAccess) {
+            paidIds.add(b._id || b.id);
+          }
+        });
+
+        // 3️⃣ Payment history (async verification) — uses your Payment model
+        if (token) {
+          try {
+            const paymentUrl = `${API_URL}/payment/user-payments`;
+            const paymentRes = await fetch(paymentUrl, {
+              signal: controller.signal,
+              credentials: 'include',
+              headers: { 
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+            });
+
+            if (paymentRes.ok) {
+              const paymentData = await paymentRes.json();
+              const payments = paymentData?.payments || paymentData || [];
               payments
                 .filter((p: any) => p.status === 'success')
-                .map((p: any) => {
-                  // Handle both populated { _id: '...' } and plain string ObjectIds
-                  if (typeof p.book === 'string') return p.book;
-                  return p.book?._id?.toString?.() || p.book?.toString?.();
-                })
-                .filter(Boolean)
-            );
-            setPaidBookIds(successfulBookIds);
-            console.log('💰 Paid books loaded:', successfulBookIds.size);
+                .forEach((p: any) => {
+                  const bookId = typeof p.book === 'string' 
+                    ? p.book 
+                    : (p.book?._id?.toString?.() || p.book?.toString?.());
+                  if (bookId) paidIds.add(bookId);
+                });
+            }
+          } catch (paymentErr: any) {
+            if (paymentErr.name === 'AbortError') return;
+            console.error('❌ Payment fetch error:', paymentErr);
+            // Non-critical: localStorage already gives us instant feedback
           }
-        } catch (paymentErr: any) {
-          if (paymentErr.name === 'AbortError') return;
-          console.error('❌ Payment fetch error:', paymentErr);
-          // Non-critical: don't block book display
         }
+
+        setPaidBookIds(paidIds);
+        console.log('💰 Paid books loaded:', paidIds.size);
+
+      } catch (err: any) {
+        if (err.name === 'AbortError') return;
+        console.error('❌ Fetch error:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
+    };
 
-    } catch (err: any) {
-      if (err.name === 'AbortError') return;
-      console.error('❌ Fetch error:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  fetchBooks();
-  return () => controller.abort();
-}, []);
+    fetchBooks();
+    return () => controller.abort();
+  }, []);
 
   // Scroll listener for back-to-top
   useEffect(() => {
