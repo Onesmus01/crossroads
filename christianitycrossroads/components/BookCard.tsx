@@ -59,14 +59,13 @@ export function BookCard({
 
   const handleAction = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onPay && !isFree && !isOwned) {
+    if (!isFree && !isOwned && onPay) {
       onPay({ id, title, price, coverImage });
     } else {
       router.push(`/bookDetails/${id}`);
     }
   }, [onPay, isFree, isOwned, id, title, price, coverImage, router]);
 
-  // Keyboard accessibility for the card
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
@@ -87,7 +86,7 @@ export function BookCard({
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
     >
-      {/* Image Container - Fixed aspect ratio prevents CLS */}
+      {/* Image Container */}
       <div className="relative aspect-[2/3] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
         {coverImage ? (
           <>
@@ -97,9 +96,9 @@ export function BookCard({
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
               quality={75}
-              priority={isBestseller} // Prioritize bestsellers if above fold
+              priority={isBestseller}
               loading={isBestseller ? 'eager' : 'lazy'}
-              className={`object-cover transition-transform duration-500 ${
+              className={`object-cover transition-all duration-500 ${
                 isHovered ? 'scale-105' : 'scale-100'
               } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
@@ -121,8 +120,22 @@ export function BookCard({
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 pointer-events-none" />
 
-        {/* Badges - Top Left */}
+        {/* ─── BADGES ─── */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-1.5 z-10">
+          
+          {/* YOURS badge — replaces nothing, just added */}
+          {isOwned && (
+            <motion.span
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+              className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-sm"
+            >
+              <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" aria-hidden="true" />
+              YOURS
+            </motion.span>
+          )}
+          
           {isNew && (
             <span className="inline-flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full shadow-sm">
               <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" aria-hidden="true" />
@@ -142,7 +155,7 @@ export function BookCard({
           )}
         </div>
 
-        {/* Wishlist Button - Top Right */}
+        {/* Wishlist Button */}
         <button
           onClick={handleLike}
           aria-label={isLiked ? `Remove ${title} from favorites` : `Add ${title} to favorites`}
@@ -156,32 +169,30 @@ export function BookCard({
           />
         </button>
 
-        {/* Rating - Bottom Left */}
+        {/* Rating */}
         <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 flex items-center gap-0.5 sm:gap-1 bg-black/50 backdrop-blur-sm px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full z-10">
           <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-amber-400 text-amber-400" aria-hidden="true" />
           <span className="text-white text-[10px] sm:text-xs font-bold">
             {(rating ?? 0).toFixed(1)}
-          </span>        </div>
+          </span>
+        </div>
       </div>
 
       {/* Content */}
       <div className="p-3 sm:p-4 flex flex-col flex-1">
-        {/* Genre Tag */}
         <span className="text-[10px] sm:text-xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 sm:mb-2 uppercase tracking-wider">
           {genre}
         </span>
 
-        {/* Title */}
         <h3 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 mb-0.5 sm:mb-1 line-clamp-1 group-hover:text-primary transition-colors">
           {title}
         </h3>
 
-        {/* Author */}
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4">
           by {author}
         </p>
 
-        {/* Footer - Price & Action */}
+        {/* Footer */}
         <div className="mt-auto pt-2 sm:pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-2">
           <div className="flex flex-col">
             {isOwned ? (
@@ -193,7 +204,6 @@ export function BookCard({
             )}
           </div>
 
-          {/* Action Button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

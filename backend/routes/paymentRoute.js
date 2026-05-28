@@ -241,7 +241,22 @@ paymentRouter.post('/mpesa/webhook', express.json(), async (req, res) => {
           user.purchasedBooks.push(book._id);
           await user.save();
         }
-        await sendPaymentEmail(user.email, user.name, payment.amount, CheckoutRequestID, book.title);
+
+        // ═══════════════════════════════════════════════════════════════
+        //  CRITICAL FIX: Wrap email in try/catch so failure NEVER crashes
+        //  the server or prevents purchase from being saved.
+        // ═══════════════════════════════════════════════════════════════
+        try {
+          // Only send if email is configured
+          if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            await sendPaymentEmail(user.email, user.name, payment.amount, CheckoutRequestID, book.title);
+          } else {
+            console.log('⚠️ Email skipped: SMTP credentials not configured');
+          }
+        } catch (emailErr) {
+          console.error('⚠️ Email failed (non-critical):', emailErr.message);
+          // Purchase is already saved — email failure doesn't affect anything
+        }
       }
     }
 
@@ -250,7 +265,6 @@ paymentRouter.post('/mpesa/webhook', express.json(), async (req, res) => {
     console.error('[WEBHOOK ERROR]', err);
   }
 });
-
 /* ================= PAYMENT STATUS ================= */
 paymentRouter.get('/mpesa/status/:transactionId', authToken, async (req, res) => {
   try {
@@ -276,6 +290,45 @@ paymentRouter.get("/all-payments", authToken, isAdmin, async (req, res) => {
     res.status(500).json({ success: false, message: "Failed to fetch payments", error: err.message });
   }
 });
+
+export const confirmPayment = async (req, res) => {
+  try {
+    const { paymentId, mpesaReceipt, checkoutRequestId } = req.body;
+
+    // Find the pending payment using the correct schema fields
+    const payment = await Payment.findOne({
+      $or: [
+        { _id: paymentId },
+        { transaction: checkoutRequestId }
+      ],
+      status: 'pending'
+    });
+
+    if (!payment) {
+      return res.status(404).json({ success: false, message: 'Payment not found or already processed' });
+    }
+
+    // Update payment record — use 'status' (not 'paymentStatus')
+    payment.status = 'success';
+    payment.mpesaReceipt = mpesaReceipt;
+    await payment.save();
+
+    // 🔥 GRANT OWNERSHIP — add book to user's purchasedBooks
+    await User.findByIdAndUpdate(payment.user, {
+      $addToSet: { purchasedBooks: payment.book }
+    });
+
+    return res.json({
+      success: true,
+      message: 'Payment confirmed and book unlocked',
+      bookId: payment.book
+    });
+
+  } catch (err) {
+    console.error('Payment confirmation error:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 paymentRouter.get("/all", authToken, isAdmin, getAllPayments);
 paymentRouter.get("/stats", authToken, isAdmin, getPaymentStats);

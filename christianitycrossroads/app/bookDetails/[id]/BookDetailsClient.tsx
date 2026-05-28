@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Star, Download, BookOpen, Share2, Heart, 
   Clock, Globe, FileText, Loader2, Lock, Smartphone, 
-  Shield, AlertCircle, ChevronRight, FileDown, CheckCircle, ExternalLink
+  Shield, AlertCircle, ChevronRight, FileDown, CheckCircle,
+  WifiOff
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { MpesaPaymentModal } from '@/components/MpesaPaymentModal';
@@ -48,71 +49,37 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'details'>('overview');
   const [readerUrl, setReaderUrl] = useState<string | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080/api';
+  const fetchRef = useRef<(() => Promise<void>) | null>(null);
 
   const getAuthToken = () => {
     if (typeof window === 'undefined') return null;
     return localStorage.getItem('token');
   };
 
-  useEffect(() => {
-    if (bookId) {
-      fetchBookDetails();
-      verifyOwnership();
-    }
-  }, [bookId]);
-
-  useEffect(() => {
-    return () => {
-      if (readerUrl && readerUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(readerUrl);
-      }
-    };
-  }, [readerUrl]);
-
-  const verifyOwnership = async () => {
-    try {
-      setCheckingOwnership(true);
-      const token = getAuthToken();
-
-      if (!token) {
-        const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
-        setIsPurchased(purchasedBooks.includes(bookId));
-        return;
-      }
-
-      const res = await fetch(`${backendUrl}/book/${bookId}/check-ownership`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setIsPurchased(data.isPurchased || data.owned);
-
-        if (data.isPurchased) {
-          const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
-          if (!purchasedBooks.includes(bookId)) {
-            purchasedBooks.push(bookId);
-            localStorage.setItem('purchasedBooks', JSON.stringify(purchasedBooks));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Ownership check failed:', error);
-      const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
-      setIsPurchased(purchasedBooks.includes(bookId));
-    } finally {
-      setCheckingOwnership(false);
-    }
-  };
-
-  const fetchBookDetails = async () => {
+  const fetchBookDetails = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${backendUrl}/book/${bookId}`);
+      setCheckingOwnership(true);
+      setConnectionError(null);
+      const token = getAuthToken();
 
-      if (!res.ok) throw new Error('Failed to fetch book');
+      console.log(`[BookDetails] Fetching from: ${backendUrl}/book/${bookId}`);
+
+      const res = await fetch(`${backendUrl}/book/${bookId}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        }
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Failed to fetch book (${res.status})`);
+      }
 
       const data = await res.json();
 
@@ -136,18 +103,78 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
           format: data.book.format || 'PDF',
           fileSize: data.book.fileSize || '2.4 MB',
         });
+
+        const backendOwned = !!data.book.isPurchased || !!data.book.isOwned || !!data.book.hasAccess;
+        setIsPurchased(backendOwned);
+        console.log('[BookDetails] Backend ownership:', backendOwned);
       }
-    } catch (error) {
-      toast.error('Failed to load book details');
-      console.error(error);
+    } catch (error: any) {
+      console.error('Fetch book error:', error);
+      
+      // Detect connection refused vs other errors
+      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
+        setConnectionError(`Cannot connect to backend at ${backendUrl}. Is your server running?`);
+      } else {
+        setConnectionError(error.message || 'Failed to load book details');
+      }
+      
+      toast.error(error.message || 'Failed to load book details');
     } finally {
       setLoading(false);
+      setCheckingOwnership(false);
     }
-  };
+  }, [bookId, backendUrl]);
 
-  /**
-   * Handle download — supports both proxy (blob) and fallback (direct URL)
-   */
+  // Keep latest fetch in ref for event listeners (avoids stale closure)
+  useEffect(() => {
+    fetchRef.current = fetchBookDetails;
+  }, [fetchBookDetails]);
+
+  // ─── MOUNT + RETURN FROM PAYMENT FLOW ────────────────────────────────
+  useEffect(() => {
+    if (!bookId) return;
+    fetchBookDetails();
+
+    const paymentJustCompleted = sessionStorage.getItem('paymentJustCompleted');
+    if (paymentJustCompleted === 'true') {
+      console.log('[BookDetails] Post-payment return detected, refreshing...');
+      sessionStorage.removeItem('paymentJustCompleted');
+      const timer = setTimeout(() => fetchRef.current?.(), 800);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookId]);
+
+  // ─── EVENT LISTENERS (stable refs, no stale closures) ───────────────
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[BookDetails] Visibility visible, refreshing...');
+        fetchRef.current?.();
+      }
+    };
+
+    const handlePaymentComplete = () => {
+      console.log('[BookDetails] Payment event received, refreshing...');
+      fetchRef.current?.();
+    };
+
+    const handleFocus = () => {
+      console.log('[BookDetails] Window focused, refreshing...');
+      fetchRef.current?.();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('payment-success', handlePaymentComplete);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('payment-success', handlePaymentComplete);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   const handleSecureDownload = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -159,37 +186,23 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
     try {
       const token = getAuthToken();
-      if (!token) {
-        throw new Error('Please log in to download');
-      }
+      if (!token) throw new Error('Please log in to download');
 
       const res = await fetch(`${backendUrl}/book/${bookId}/download`, {
+        credentials: 'include',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      // Check if response is JSON (fallback) or binary (proxy)
       const contentType = res.headers.get('content-type') || '';
 
       if (contentType.includes('application/json')) {
-        // 🔥 FALLBACK: Backend returned JSON with direct URL
         const data = await res.json();
-
         if (!data.success || !data.fileUrl) {
           throw new Error(data.message || 'Download failed');
         }
-
-        console.log('[DOWNLOAD] Using fallback direct URL');
-
-        // Open in new tab — browser handles the download
         window.open(data.fileUrl, '_blank');
-
-        toast.success('Opening download in new tab...', { 
-          id: toastId, 
-          icon: '📥',
-          duration: 4000
-        });
+        toast.success('Opening download in new tab...', { id: toastId, icon: '📥', duration: 4000 });
       } else {
-        // ✅ PROXY: Backend sent the actual file bytes
         const disposition = res.headers.get('content-disposition');
         let fileName = `${book?.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
         if (disposition) {
@@ -199,7 +212,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
-
         const link = document.createElement('a');
         link.href = url;
         link.download = fileName;
@@ -208,16 +220,12 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        toast.success('Download started! Check your downloads folder.', { 
-          id: toastId, 
-          icon: '📥',
-          duration: 4000
-        });
+        toast.success('Download started!', { id: toastId, icon: '📥', duration: 4000 });
       }
 
-      // Log download
       fetch(`${backendUrl}/book/${bookId}/download-log`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Authorization': `Bearer ${token}` }
       }).catch(() => {});
 
@@ -225,7 +233,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       console.error('Download error:', error);
       toast.error(error.message || 'Download failed. Try again.', { id: toastId });
 
-      if (error.message?.includes('unauthorized') || error.message?.includes('purchase')) {
+      if (error.message?.includes('unauthorized') || error.message?.includes('purchase') || error.message?.includes('403')) {
         setIsPurchased(false);
         setShowPaymentModal(true);
       }
@@ -234,9 +242,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     }
   };
 
-  /**
-   * Handle read online — fetches PDF bytes, creates blob URL
-   */
   const handleReadOnline = async () => {
     if (!isPurchased && book?.price && book.price > 0) {
       setShowPaymentModal(true);
@@ -248,39 +253,28 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
     try {
       const token = getAuthToken();
-      if (!token) {
-        throw new Error('Please log in to read');
-      }
+      if (!token) throw new Error('Please log in to read');
 
       const res = await fetch(`${backendUrl}/book/${bookId}/view`, {
+        credentials: 'include',
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       const contentType = res.headers.get('content-type') || '';
 
       if (contentType.includes('application/json')) {
-        // 🔥 FALLBACK: Backend returned JSON
         const data = await res.json();
-
         if (!data.success || !data.fileUrl) {
           throw new Error(data.message || 'Failed to load book');
         }
-
-        console.log('[READ] Using fallback direct URL');
-
-        // For direct Cloudinary URL, we can't embed due to CORS
-        // So open in new tab where browser's PDF viewer works
         window.open(data.fileUrl, '_blank');
-
-        toast.success('Opening in new tab (PDF viewer)...', { id: toastId, icon: '📖' });
+        toast.success('Opening in new tab...', { id: toastId, icon: '📖' });
         setIsOpeningReader(false);
         return;
       }
 
-      // ✅ PROXY: Got PDF bytes — create blob URL
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
-
       setReaderUrl(blobUrl);
       toast.success('Book loaded!', { id: toastId, icon: '📖' });
 
@@ -292,21 +286,11 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   };
 
   const handlePaymentSuccess = async () => {
+    setShowPaymentModal(false);
+    toast.success('Payment successful! Refreshing access...', { duration: 3000, icon: '🎉' });
     setIsPurchased(true);
-
-    const purchasedBooks = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
-    if (!purchasedBooks.includes(bookId)) {
-      purchasedBooks.push(bookId);
-      localStorage.setItem('purchasedBooks', JSON.stringify(purchasedBooks));
-    }
-
-    toast.success('Payment successful! You can now download or read the book.', { 
-      duration: 5000,
-      icon: '🎉'
-    });
-
-    await verifyOwnership();
-    await fetchBookDetails();
+    window.dispatchEvent(new CustomEvent('payment-success'));
+    setTimeout(() => fetchRef.current?.(), 600);
   };
 
   const handleShare = async () => {
@@ -328,6 +312,40 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
   const discount = book?.originalPrice && book?.price && book.originalPrice > book.price
     ? Math.round(((book.originalPrice - book.price) / book.originalPrice) * 100)
     : 0;
+
+  // ─── CONNECTION ERROR STATE ──────────────────────────────────────────
+  if (connectionError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-md"
+        >
+          <WifiOff className="w-16 h-16 text-zinc-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Connection Error</h2>
+          <p className="text-zinc-500 mb-2">{connectionError}</p>
+          <p className="text-sm text-zinc-400 mb-6">
+            Backend URL: <code className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">{backendUrl}</code>
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button 
+              onClick={() => fetchBookDetails()} 
+              className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 transition-colors"
+            >
+              Try Again
+            </button>
+            <button 
+              onClick={() => router.back()} 
+              className="px-6 py-3 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-full font-semibold hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -358,7 +376,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
     );
   }
 
-  // Reader view with blob URL
   if (readerUrl) {
     return (
       <div className="fixed inset-0 z-50 bg-zinc-900 flex flex-col">
@@ -439,7 +456,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
-
           <div className="lg:col-span-4">
             <motion.div 
               initial={{ opacity: 0, y: 20 }} 
@@ -501,7 +517,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
                 <div className="flex items-center gap-1 bg-amber-50 dark:bg-amber-900/20 px-3 py-1 rounded-full">
                   <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                   <span className="font-bold text-amber-700 dark:text-amber-300">{book.rating.toFixed(1)}</span>
-                  <span className="text-amber-600/60 text-sm ml-1">(128 reviews)</span>
                 </div>
                 {discount > 0 && (
                   <span className="px-3 py-1 bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 text-sm font-bold rounded-full">
@@ -615,7 +630,6 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
                     <p className="text-lg leading-relaxed text-zinc-600 dark:text-zinc-300 mb-8">
                       {book.description}
                     </p>
-
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <StatCard icon={BookOpen} label="Pages" value={book.pages} />
                       <StatCard icon={Globe} label="Language" value={book.language} />

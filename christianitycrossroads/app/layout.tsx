@@ -6,6 +6,8 @@ import { ContextProvider } from '@/context/userContext'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import GoogleProvider from '@/components/GoogleProvider'
+import { LogoutListener } from '@/components/LogoutListener';
+
 
 
 import { Toaster } from 'react-hot-toast'
@@ -70,6 +72,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={geist.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased">
+        <LogoutListener>
         <GoogleProvider>
           <ContextProvider>
             <Header />
@@ -82,6 +85,7 @@ export default function RootLayout({
             <Toaster position="top-right" />
           </ContextProvider>
         </GoogleProvider>
+        </LogoutListener>
       </body>
     </html>
   )

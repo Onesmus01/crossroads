@@ -7,6 +7,7 @@ import { ThemeToggle } from './ThemeToggle'
 import { Context } from "@/context/userContext.js"
 import { toast } from 'react-hot-toast'
 import { useRouter, usePathname } from 'next/navigation'
+import { logout } from '@/utils/logout'
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8080/api'
 
@@ -16,7 +17,7 @@ export function Header() {
   const [scrolled, setScrolled] = useState(false)
 
   const { user, setUserDetails } = useContext(Context)
-  const dropdownRef = useRef(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -27,8 +28,8 @@ export function Header() {
   }, [])
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setProfileOpen(false)
       }
     }
@@ -47,7 +48,7 @@ export function Header() {
     setProfileOpen(false)
   }, [pathname])
 
-  const getAvatarColor = (letter) => {
+  const getAvatarColor = (letter?: string) => {
     if (!letter) return "bg-zinc-500"
     const colors = [
       "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-green-500",
@@ -61,30 +62,9 @@ export function Header() {
   const isAdmin = user?.role === "admin"
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("token") || ""
-    try {
-      const response = await fetch(`${backendUrl}/user/logout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      const data = await response.json()
-
-      if (response.ok) {
-        setUserDetails(null)
-        setProfileOpen(false)
-        setIsOpen(false)
-        toast.success(data.message || "Logged out successfully")
-        router.push('/login')
-      } else {
-        toast.error(data.message || "Logout failed")
-      }
-    } catch (error) {
-      toast.error("Something went wrong")
-    }
+    setProfileOpen(false)
+    setIsOpen(false)
+    await logout('/login')
   }
 
   const navLinks = [

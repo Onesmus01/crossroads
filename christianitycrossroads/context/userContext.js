@@ -38,7 +38,7 @@ export const ContextProvider = ({ children }) => {
       if (data.data) setUserDetails(data.data);
       console.log("User details fetched:", data.data);
     } catch (err) {
-      console.error("Network error:", err.message);
+      console.log("Network error:", err.message);
     }
   };
 

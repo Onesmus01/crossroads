@@ -33,12 +33,6 @@ interface Book {
   isBestseller?: boolean;
 }
 
-interface ApiResponse {
-  success: boolean;
-  books?: Book[];
-  message?: string;
-}
-
 // ─── Constants ───────────────────────────────────────────
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
 
@@ -125,7 +119,52 @@ export default function BooksPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  // Fetch books + ownership status (mirrors BookDetails logic)
+  // ═══════════════════════════════════════════════════════════════════════
+  //  SECURE: Build paidBookIds ONLY from authenticated backend sources.
+  //  localStorage is NEVER used for ownership — it leaks across users.
+  // ═══════════════════════════════════════════════════════════════════════
+  const buildPaidSet = useCallback(async (booksArray: any[] = []) => {
+    const paidIds = new Set<string>();
+
+    // 1️⃣ Backend flags inside book objects (per-user, authenticated response)
+    booksArray.forEach((b: any) => {
+      if (b.isPurchased || b.isOwned || b.hasAccess) {
+        paidIds.add(b._id || b.id);
+      }
+    });
+
+    // 2️⃣ Payment history (authenticated endpoint — token required)
+    const token = localStorage.getItem('token') || '';
+    if (token) {
+      try {
+        const res = await fetch(`${API_URL}/payment/user-payments`, {
+          credentials: 'include',
+          headers: { 
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const payments = data?.payments || data || [];
+          payments
+            .filter((p: any) => p.status === 'success')
+            .forEach((p: any) => {
+              const bookId = typeof p.book === 'string' 
+                ? p.book 
+                : (p.book?._id?.toString?.() || p.book?.toString?.());
+              if (bookId) paidIds.add(bookId);
+            });
+        }
+      } catch (err) {
+        console.error('Payment fetch error:', err);
+      }
+    }
+
+    setPaidBookIds(paidIds);
+  }, []);
+
+  // ─── Fetch Books ─────────────────────────────────────────────────────
   useEffect(() => {
     const controller = new AbortController();
     
@@ -137,8 +176,6 @@ export default function BooksPage() {
         const token = localStorage.getItem('token') || '';
         const url = `${API_URL}/book/all-books`;
         
-        console.log('🌐 Fetching:', url);
-
         const res = await fetch(url, {
           signal: controller.signal,
           credentials: 'include',
@@ -149,81 +186,17 @@ export default function BooksPage() {
         });
 
         const data = await res.json();
-        console.log('📦 Response:', data);
+        if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
 
-        if (!res.ok) {
-          throw new Error(data?.message || `HTTP ${res.status}`);
-        }
-
-        // ✅ FIXED: Accept both { success: true, books: [] } and { books: [] }
         const booksArray = data?.books || data;
-        
-        if (!Array.isArray(booksArray)) {
-          throw new Error('Invalid response: expected array of books');
-        }
+        if (!Array.isArray(booksArray)) throw new Error('Invalid response: expected array of books');
 
         setBooks(booksArray);
-
-        // ═══════════════════════════════════════════════════
-        //  Ownership check — same sources as BookDetailsClient
-        // ═══════════════════════════════════════════════════
-        const paidIds = new Set<string>();
-
-        // 1️⃣ LocalStorage (instant, sync) — BookDetails writes here after M-Pesa
-        try {
-          const stored = JSON.parse(localStorage.getItem('purchasedBooks') || '[]');
-          if (Array.isArray(stored)) {
-            stored.forEach((id: string) => paidIds.add(id));
-          }
-        } catch {
-          // ignore parse errors
-        }
-
-        // 2️⃣ Backend flag inside book objects (if your API sends isPurchased / isOwned)
-        booksArray.forEach((b: any) => {
-          if (b.isPurchased || b.isOwned || b.hasAccess) {
-            paidIds.add(b._id || b.id);
-          }
-        });
-
-        // 3️⃣ Payment history (async verification) — uses your Payment model
-        if (token) {
-          try {
-            const paymentUrl = `${API_URL}/payment/user-payments`;
-            const paymentRes = await fetch(paymentUrl, {
-              signal: controller.signal,
-              credentials: 'include',
-              headers: { 
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`
-              },
-            });
-
-            if (paymentRes.ok) {
-              const paymentData = await paymentRes.json();
-              const payments = paymentData?.payments || paymentData || [];
-              payments
-                .filter((p: any) => p.status === 'success')
-                .forEach((p: any) => {
-                  const bookId = typeof p.book === 'string' 
-                    ? p.book 
-                    : (p.book?._id?.toString?.() || p.book?.toString?.());
-                  if (bookId) paidIds.add(bookId);
-                });
-            }
-          } catch (paymentErr: any) {
-            if (paymentErr.name === 'AbortError') return;
-            console.error('❌ Payment fetch error:', paymentErr);
-            // Non-critical: localStorage already gives us instant feedback
-          }
-        }
-
-        setPaidBookIds(paidIds);
-        console.log('💰 Paid books loaded:', paidIds.size);
+        await buildPaidSet(booksArray);
 
       } catch (err: any) {
         if (err.name === 'AbortError') return;
-        console.error('❌ Fetch error:', err);
+        console.error('Fetch error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -232,7 +205,17 @@ export default function BooksPage() {
 
     fetchBooks();
     return () => controller.abort();
-  }, []);
+  }, [buildPaidSet]);
+
+  // ─── Listen for payment-success to refresh ownership ─────────────────
+  useEffect(() => {
+    const handlePaymentSuccess = () => {
+      console.log('[BooksPage] Payment detected, refreshing ownership...');
+      buildPaidSet(books);
+    };
+    window.addEventListener('payment-success', handlePaymentSuccess);
+    return () => window.removeEventListener('payment-success', handlePaymentSuccess);
+  }, [books, buildPaidSet]);
 
   // Scroll listener for back-to-top
   useEffect(() => {
@@ -257,7 +240,7 @@ export default function BooksPage() {
     return { total, free, avgRating };
   }, [books]);
 
-  // Derived: filtered & sorted books (uses debounced search)
+  // Derived: filtered & sorted books
   const filteredBooks = useMemo(() => {
     let result = [...books];
 
@@ -300,7 +283,6 @@ export default function BooksPage() {
     return result;
   }, [books, debouncedSearch, selectedGenre, sortBy]);
 
-  // Helpers
   const isNew = useCallback((createdAt?: string) => {
     if (!createdAt) return false;
     const days = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24);
@@ -346,7 +328,6 @@ export default function BooksPage() {
       
       {/* ═══════ Hero Header ═══════ */}
       <div className="relative overflow-hidden pt-8 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-        {/* Animated gradient mesh background */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
@@ -359,7 +340,6 @@ export default function BooksPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            {/* Breadcrumb / label */}
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -386,7 +366,6 @@ export default function BooksPage() {
               Explore our curated collection of Christian books, devotionals, and theological works crafted for your spiritual journey.
             </p>
 
-            {/* Quick Stats Pills */}
             {!loading && books.length > 0 && (
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}

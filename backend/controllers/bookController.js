@@ -90,16 +90,83 @@ export const addBook = async (req, res) => {
   }
 };
 // Get all books
+
 export const getAllBooks = async (req, res) => {
   try {
     const books = await Book.find().sort({ createdAt: -1 });
-    res.json({ books });
+
+    // Check auth header to optionally inject isPurchased per book
+    let userId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.TOKEN_SECRET_KEY);
+        userId = decoded._id || decoded.id;
+      } catch {
+        userId = null;
+      }
+    }
+
+    let user = null;
+    if (userId) {
+      user = await User.findById(userId).lean();
+    }
+
+    const enrichedBooks = books.map(book => {
+      const bookObj = book.toObject();
+      let isPurchased = false;
+
+      if (user?.purchasedBooks) {
+        isPurchased = user.purchasedBooks.some(
+          id => id.toString() === bookObj._id.toString()
+        );
+      }
+
+      return {
+        ...bookObj,
+        isPurchased,
+      };
+    });
+
+    res.json({ books: enrichedBooks });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const getMyBooks = async (req, res) => {
+  try {
+    const userId = req.userId || req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
+    }
+
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Return just the IDs — frontend builds the Set from this
+    const bookIds = (user.purchasedBooks || []).map(id => id.toString());
+
+    res.json({
+      success: true,
+      bookIds,
+      count: bookIds.length,
+    });
+
+  } catch (error) {
+    console.error('getMyBooks error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
 // Get a single book by ID
+import jwt from 'jsonwebtoken';
+import User from "../models/userModel.js";
+
 export const getBookById = async (req, res) => {
   const { id } = req.params;
 
@@ -110,7 +177,52 @@ export const getBookById = async (req, res) => {
   try {
     const book = await Book.findById(id);
     if (!book) return res.status(404).json({ message: "Book not found" });
-    res.json({ book });
+
+    let isPurchased = false;
+    const authHeader = req.headers.authorization;
+
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.TOKEN_SECRET_KEY);
+        const userId = decoded._id || decoded.id;
+
+        // 1. Check purchasedBooks array (fast)
+        const user = await User.findById(userId);
+        if (user?.purchasedBooks) {
+          isPurchased = user.purchasedBooks.some(
+            (bookId) => bookId.toString() === id
+          );
+        }
+
+        // 2. Fallback: check Payment collection + auto-heal user record
+        if (!isPurchased) {
+          const purchase = await Payment.findOne({
+            user: userId,      // ← matches your schema
+            book: id,          // ← matches your schema
+            status: 'success'  // ← matches your schema
+          });
+
+          if (purchase) {
+            isPurchased = true;
+            // Heal: add to purchasedBooks so next request is instant
+            await User.findByIdAndUpdate(userId, {
+              $addToSet: { purchasedBooks: id }
+            });
+          }
+        }
+      } catch (err) {
+        isPurchased = false;
+      }
+    }
+
+    res.json({
+      book: {
+        ...book.toObject(),
+        isPurchased,
+      }
+    });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
@@ -209,38 +321,24 @@ export const deleteBook = async (req, res) => {
 
 export const downloadBook = async (req, res) => {
   try {
-    const userId = req.user.id;
+    // Use whatever your auth middleware sets: req.user.id or req.userId
+    const userId = req.userId || req.user?.id;
     const bookId = req.params.id;
 
-    // Find purchase
+    // FIXED field names to match Payment schema
     const purchase = await Payment.findOne({
-      userId,
-      bookId,
-      paymentStatus: 'success'
+      user: userId,        // was userId
+      book: bookId,        // was bookId
+      status: 'success'     // was paymentStatus
     });
 
     if (!purchase) {
-      return res.status(403).json({
-        success: false,
-        message: 'Purchase required'
-      });
+      return res.status(403).json({ success: false, message: 'Purchase required' });
     }
 
-    // Find book
     const book = await Book.findById(bookId);
-
-    if (!book) {
-      return res.status(404).json({
-        success: false,
-        message: 'Book not found'
-      });
-    }
-
-    if (!book.fileUrl) {
-      return res.status(404).json({
-        success: false,
-        message: 'Book file missing'
-      });
+    if (!book || !book.fileUrl) {
+      return res.status(404).json({ success: false, message: 'Book not found' });
     }
 
     return res.json({
@@ -250,66 +348,38 @@ export const downloadBook = async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
 export const readBookOnline = async (req, res) => {
   try {
-    const userId = req.user.id
-    const bookId = req.params.id
+    const userId = req.userId || req.user?.id;
+    const bookId = req.params.id;
 
-    // Check payment
+    // FIXED field names
     const purchase = await Payment.findOne({
-      userId,
-      bookId,
-      paymentStatus: 'success'
-    })
+      user: userId,
+      book: bookId,
+      status: 'success'
+    });
 
     if (!purchase) {
-      return res.status(403).json({
-        success: false,
-        message: 'Purchase required'
-      })
+      return res.status(403).json({ success: false, message: 'Purchase required' });
     }
 
-    const book = await Book.findById(bookId)
-
+    const book = await Book.findById(bookId);
     if (!book || !book.fileUrl) {
-      return res.status(404).json({
-        success: false,
-        message: 'Book not found'
-      })
+      return res.status(404).json({ success: false, message: 'Book not found' });
     }
 
-    // Stream PDF (no download headers)
-    const response = await axios({
-      method: 'GET',
-      url: book.fileUrl,
-      responseType: 'stream'
-    })
-
-    res.setHeader('Content-Type', 'application/pdf')
-
-    // IMPORTANT: inline instead of attachment
-    res.setHeader(
-      'Content-Disposition',
-      `inline; filename="${book.title}.pdf"`
-    )
-
-    response.data.pipe(res)
+    // Stream or proxy PDF
+    res.json({ success: true, fileUrl: book.fileUrl });
 
   } catch (error) {
-    console.log(error)
-
-    return res.status(500).json({
-      success: false,
-      message: 'Server error'
-    })
+    console.error(error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
-}
+};
+

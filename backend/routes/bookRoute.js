@@ -15,6 +15,8 @@ import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import fs from "fs";
 import https from "https";
+import { getMyBooks } from '../controllers/bookController.js';
+
 
 const router = express.Router();
 
@@ -44,6 +46,8 @@ router.post(
   ]),
   addBook
 );
+
+router.get('/my-books', authToken, getMyBooks);
 
 router.put(
   "/update/:id",
@@ -344,6 +348,8 @@ router.get('/:id/read', authToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Read error' });
   }
 });
+
+
 
 /**
  * ✅ Download Logging

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Phone, Shield, Loader2, CheckCircle, AlertCircle, LogIn, BookOpen } from 'lucide-react';
+import { X, Phone, Shield, Loader2, AlertCircle, LogIn, BookOpen, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { Context } from '@/context/userContext';
-import Link from 'next/link';
 
 interface Book {
   id: string;
@@ -19,7 +18,7 @@ interface MpesaPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   book: Book | null;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 interface PaymentResponse {
@@ -28,30 +27,18 @@ interface PaymentResponse {
   checkoutRequestId?: string;
   transaction_id?: string;
   error?: string;
-}
-
-interface StatusResponse {
-  success: boolean;
-  status: 'pending' | 'success' | 'failed' | 'cancelled';
-  resultDesc?: string;
-  message?: string;
+  alreadyPurchased?: boolean;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api';
-const POLLING_INTERVAL = 3000;
-const MAX_POLLING_ATTEMPTS = 40;
 
 export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPaymentModalProps) {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<'phone' | 'processing' | 'success' | 'login-required'>('phone');
+  const [step, setStep] = useState<'phone' | 'login-required'>('phone');
   const [error, setError] = useState('');
-  const [checkoutRequestId, setCheckoutRequestId] = useState('');
   const [justLoggedIn, setJustLoggedIn] = useState(false);
   
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const attemptsRef = useRef(0);
   const router = useRouter();
   const { user } = useContext(Context);
 
@@ -67,11 +54,8 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
           setJustLoggedIn(true);
           setStep('phone');
           toast.success('Well done! You can pay now.', { icon: '✅', duration: 4000 });
-          // Clear the flags
           sessionStorage.removeItem('returnToPayment');
           sessionStorage.removeItem('pendingBook');
-          
-          // Auto-hide the "well done" message after 3 seconds
           setTimeout(() => setJustLoggedIn(false), 3000);
         }
       }
@@ -89,34 +73,15 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
     }
   }, [isOpen, book, user]);
 
-  // Cleanup on unmount or close
-  useEffect(() => {
-    return () => stopPolling();
-  }, []);
-
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
       setPhone('');
       setError('');
       setStep('phone');
-      setCheckoutRequestId('');
       setJustLoggedIn(false);
-      attemptsRef.current = 0;
     }
   }, [isOpen]);
-
-  const stopPolling = useCallback(() => {
-    if (pollIntervalRef.current) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    attemptsRef.current = 0;
-  }, []);
 
   const formatPhone = (value: string) => {
     const digits = value.replace(/\D/g, '');
@@ -132,102 +97,22 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
 
   const validatePhone = (phone: string): string | null => {
     let formatted = phone.replace(/\s/g, '');
-    
     if (formatted.startsWith('0')) {
       formatted = '254' + formatted.substring(1);
     }
-    
     if (!formatted.startsWith('254') || formatted.length !== 12) {
       return null;
     }
-    
     return formatted;
   };
 
   const handleLoginRedirect = () => {
-    // Store intent to return to payment
     sessionStorage.setItem('returnToPayment', 'true');
     sessionStorage.setItem('pendingBook', JSON.stringify(book));
     sessionStorage.setItem('redirectAfterLogin', window.location.pathname + window.location.search);
-    
     onClose();
     router.push('/login');
   };
-
-  const checkPaymentStatus = useCallback(async (checkoutId: string): Promise<boolean> => {
-    try {
-      const token = getAuthToken();
-      abortControllerRef.current = new AbortController();
-      
-      const res = await fetch(`${API_BASE_URL}/payment/mpesa/status/${checkoutId}`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: Status check failed`);
-      }
-      
-      const data: StatusResponse = await res.json();
-      
-      if (!data.success) {
-        throw new Error(data.message || 'Status check returned unsuccessful');
-      }
-
-      const status = data.status?.toLowerCase();
-      
-      if (status === 'success') {
-        stopPolling();
-        setStep('success');
-        toast.success('Payment confirmed! Book unlocked.', { icon: '🎉', duration: 5000 });
-        onSuccess();
-        return true;
-      } 
-      
-      if (status === 'failed' || status === 'cancelled') {
-        stopPolling();
-        setError(data.resultDesc || `Payment ${status}. Please try again.`);
-        setStep('phone');
-        setLoading(false);
-        toast.error(data.resultDesc || `Payment ${status}`, { icon: '❌' });
-        return true;
-      }
-      
-      return false;
-      
-    } catch (err: any) {
-      if (err.name === 'AbortError') return false;
-      console.error('Status check error:', err);
-      return false;
-    }
-  }, [onSuccess, stopPolling]);
-
-  const startPolling = useCallback((checkoutId: string) => {
-    attemptsRef.current = 0;
-    checkPaymentStatus(checkoutId);
-    
-    pollIntervalRef.current = setInterval(async () => {
-      attemptsRef.current++;
-      
-      if (attemptsRef.current >= MAX_POLLING_ATTEMPTS) {
-        stopPolling();
-        setError('Payment confirmation timed out. Please check your M-Pesa messages and refresh if needed.');
-        setStep('phone');
-        setLoading(false);
-        toast.error('Payment timed out. Check your M-Pesa messages.', { icon: '⏰', duration: 6000 });
-        return;
-      }
-
-      const shouldStop = await checkPaymentStatus(checkoutId);
-      if (shouldStop) return;
-      
-    }, POLLING_INTERVAL);
-  }, [checkPaymentStatus, stopPolling]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,14 +124,12 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
     }
 
     const formattedPhone = validatePhone(phone);
-    
     if (!formattedPhone) {
       setError('Please enter a valid M-Pesa number (e.g., 0712 345 678)');
       return;
     }
 
     setLoading(true);
-    setStep('processing');
 
     try {
       const token = getAuthToken();
@@ -268,49 +151,58 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
 
       const data: PaymentResponse = await res.json();
 
+      // ─── HANDLE ALREADY PURCHASED (backend may send as success OR error) ─
+      const isAlreadyPurchased = 
+        data.alreadyPurchased === true ||
+        data.error?.toLowerCase().includes('already purchased') || 
+        data.message?.toLowerCase().includes('already purchased');
+
+      if (isAlreadyPurchased) {
+        toast.success('You already own this book!', { icon: '✅', duration: 4000 });
+        // Clean up any stale payment session
+        sessionStorage.removeItem('mpesaPayment');
+        onSuccess?.();
+        onClose();
+        router.push(`/bookDetails/${book?.id}`);
+        return;
+      }
+
       if (!res.ok || !data.success) {
         throw new Error(data.error || data.message || 'Payment initiation failed');
       }
 
       const checkoutId = data.checkoutRequestId || data.transaction_id;
-      
       if (!checkoutId) {
         throw new Error('Invalid response: No transaction ID received');
       }
 
-      setCheckoutRequestId(checkoutId);
+      // Store payment session for verify page
+      sessionStorage.setItem('mpesaPayment', JSON.stringify({
+        checkoutId,
+        book,
+        timestamp: Date.now(),
+      }));
+
       toast.success(data.message || 'STK Push sent! Check your phone.', {
         duration: 5000,
         icon: '📱',
       });
-      
-      startPolling(checkoutId);
+
+      onSuccess?.();
+      onClose();
+      router.push(`/payment/verify?bookId=${book?.id}`);
 
     } catch (err: any) {
       console.error('Payment initiation error:', err);
       setError(err.message || 'Something went wrong. Please try again.');
-      setStep('phone');
       setLoading(false);
       toast.error(err.message || 'Payment failed', { icon: '❌' });
     }
   };
 
   const handleClose = () => {
-    if (step === 'success') {
-      stopPolling();
-      onClose();
-      return;
-    }
-    
-    if (loading && step === 'processing') {
-      if (confirm('Payment is still processing. Close anyway? You will be notified via M-Pesa SMS once complete.')) {
-        stopPolling();
-        onClose();
-      }
-      return;
-    }
-    
-    stopPolling();
+    // Clean up stale payment session if user manually closes
+    sessionStorage.removeItem('mpesaPayment');
     onClose();
   };
 
@@ -319,7 +211,6 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
   return (
     <AnimatePresence mode="wait">
       <>
-        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -328,7 +219,6 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
         />
 
-        {/* Modal */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -340,13 +230,12 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
             className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden pointer-events-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            
             {/* Header */}
             <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white">
               <button
                 onClick={handleClose}
-                disabled={loading && step === 'processing'}
-                className="absolute top-4 right-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+                className="absolute top-4 right-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors disabled:opacity-50"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -374,8 +263,6 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
             {/* Body */}
             <div className="p-6">
               <AnimatePresence mode="wait">
-                
-                {/* LOGIN REQUIRED STEP */}
                 {step === 'login-required' && (
                   <motion.div
                     key="login-required"
@@ -396,7 +283,7 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                     <div className="space-y-2">
                       <h4 className="font-bold text-xl dark:text-white">Login Required</h4>
                       <p className="text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
-                        Please login first to complete your purchase of <span className="font-semibold text-foreground">"{book.title}"</span>
+                        Please login first to complete your purchase of <span className="font-semibold">"{book.title}"</span>
                       </p>
                     </div>
 
@@ -405,7 +292,7 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleLoginRedirect}
-                        className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg hover:bg-emerald-700 active:bg-emerald-800 transition-all shadow-lg shadow-emerald-200 dark:shadow-none flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold text-lg hover:bg-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
                       >
                         <LogIn className="w-5 h-5" />
                         Login to Continue
@@ -422,13 +309,12 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                     <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800">
                       <BookOpen className="w-5 h-5 text-amber-600 shrink-0" />
                       <p className="text-sm text-amber-700 dark:text-amber-300 text-left">
-                        Don't worry! After logging in, you'll be redirected back here automatically to complete your payment.
+                        Don't worry! After logging in, you'll be redirected back here automatically.
                       </p>
                     </div>
                   </motion.div>
                 )}
 
-                {/* PHONE INPUT STEP */}
                 {step === 'phone' && (
                   <motion.form
                     key="phone"
@@ -438,7 +324,6 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                     onSubmit={handleSubmit}
                     className="space-y-6"
                   >
-                    {/* Success message after login */}
                     {justLoggedIn && (
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -481,7 +366,7 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                       )}
                       
                       <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-                        Enter your M-Pesa registered number. You'll receive an STK push notification to complete payment.
+                        Enter your M-Pesa registered number. You'll receive an STK push notification.
                       </p>
                     </div>
 
@@ -507,92 +392,6 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                       )}
                     </button>
                   </motion.form>
-                )}
-
-                {/* PROCESSING STEP */}
-                {step === 'processing' && (
-                  <motion.div
-                    key="processing"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="py-8 text-center space-y-6"
-                  >
-                    <motion.div
-                      animate={{ scale: [1, 1.1, 1] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto"
-                    >
-                      <Loader2 className="w-12 h-12 text-emerald-600 animate-spin" />
-                    </motion.div>
-                    
-                    <div className="space-y-2">
-                      <h4 className="font-bold text-xl dark:text-white">Check your phone</h4>
-                      <p className="text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
-                        We've sent an M-Pesa prompt to your phone. Enter your PIN to complete the payment.
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="w-full bg-zinc-200 dark:bg-zinc-700 rounded-full h-2 overflow-hidden">
-                        <motion.div 
-                          className="bg-emerald-500 h-full rounded-full"
-                          initial={{ width: "0%" }}
-                          animate={{ width: "100%" }}
-                          transition={{ duration: MAX_POLLING_ATTEMPTS * (POLLING_INTERVAL / 1000), ease: "linear" }}
-                        />
-                      </div>
-                      <p className="text-xs text-zinc-400">
-                        Waiting for confirmation... {checkoutRequestId && `(ID: ...${checkoutRequestId.slice(-6)})`}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={handleClose}
-                      className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 underline underline-offset-4"
-                    >
-                      Cancel and close
-                    </button>
-                  </motion.div>
-                )}
-
-                {/* SUCCESS STEP */}
-                {step === 'success' && (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                    className="py-8 text-center space-y-6"
-                  >
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                      className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-200"
-                    >
-                      <CheckCircle className="w-12 h-12 text-white" />
-                    </motion.div>
-                    
-                    <div className="space-y-1">
-                      <h4 className="font-bold text-2xl text-emerald-600">Payment Successful!</h4>
-                      <p className="text-zinc-500 dark:text-zinc-400">
-                        Transaction ID: <span className="font-mono font-medium">{checkoutRequestId.slice(-6)}</span>
-                      </p>
-                      <p className="text-sm text-zinc-400 dark:text-zinc-500 mt-2">
-                        Your book is now unlocked and ready to read
-                      </p>
-                    </div>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleClose}
-                      className="mt-6 px-8 py-3 bg-zinc-900 dark:bg-white dark:text-zinc-900 text-white rounded-xl font-semibold hover:bg-zinc-800 dark:hover:bg-zinc-100 transition-colors"
-                    >
-                      Start Reading
-                    </motion.button>
-                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
