@@ -5,6 +5,8 @@ import { RootLayoutClient } from './layout-client'
 import { ContextProvider } from '@/context/userContext'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
+import GoogleProvider from '@/components/GoogleProvider'
+
 
 import { Toaster } from 'react-hot-toast'
 import './globals.css'
@@ -68,16 +70,18 @@ export default function RootLayout({
   return (
     <html lang="en" className={geist.variable} suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <ContextProvider>
-          <Header />
+        <GoogleProvider>
+          <ContextProvider>
+            <Header />
 
           <RootLayoutClient>
             {children}
           </RootLayoutClient>
 
-          <Footer />
-          <Toaster position="top-right" />
-        </ContextProvider>
+            <Footer />
+            <Toaster position="top-right" />
+          </ContextProvider>
+        </GoogleProvider>
       </body>
     </html>
   )

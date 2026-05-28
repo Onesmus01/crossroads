@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useContext } from 'react'          // ADDED useContext
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FcGoogle } from 'react-icons/fc'
@@ -9,12 +9,15 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 import { UserPlus, ArrowLeft, Camera } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { toast } from 'react-hot-toast'
+import { GoogleLogin } from '@react-oauth/google'
+import { Context } from "@/context/userContext.js"              // ADDED
 import ImageToBase64 from '@/helpers/ImageToBase64.jsx'
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080/api'
 
 export default function SignUp() {
   const router = useRouter()
+  const { fetchUserDetails } = useContext(Context)              // ADDED
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -30,6 +33,24 @@ export default function SignUp() {
 
   const [photo, setPhoto] = useState('')
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.FB) {
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          cookie: true,
+          xfbml: true,
+          version: 'v18.0',
+        })
+      }
+      const script = document.createElement('script')
+      script.src = 'https://connect.facebook.net/en_US/sdk.js'
+      script.async = true
+      script.defer = true
+      document.body.appendChild(script)
+    }
+  }, [])
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0]
     if (!file || !file.type.startsWith('image/')) return
@@ -42,6 +63,52 @@ export default function SignUp() {
   const handleOnChange = (e) => {
     const { name, value } = e.target
     setData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSocialSuccess = async (endpoint, payload) => {
+    try {
+      const res = await fetch(`${backendUrl}/user/${endpoint}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const responseData = await res.json()
+
+      if (responseData.success && responseData.token) {
+        localStorage.setItem('token', responseData.token)
+        await fetchUserDetails()                              // ADDED
+        toast.success(responseData.message || 'Welcome! 🎉')
+        router.push('/')
+      } else {
+        toast.error(responseData.message || 'Social signup failed')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Something went wrong!')
+    }
+  }
+
+  const handleGoogle = (credentialResponse) => {
+    handleSocialSuccess('google', { credential: credentialResponse.credential })
+  }
+
+  const handleFacebook = () => {
+    if (!window.FB) {
+      toast.error('Facebook SDK not loaded')
+      return
+    }
+    window.FB.login(
+      (response) => {
+        if (response.authResponse) {
+          const { accessToken, userID } = response.authResponse
+          handleSocialSuccess('facebook', { accessToken, userID })
+        } else {
+          toast.error('Facebook login cancelled')
+        }
+      },
+      { scope: 'email,public_profile' }
+    )
   }
 
   const handleSubmit = async (e) => {
@@ -284,17 +351,21 @@ export default function SignUp() {
 
               {/* Social Login */}
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                <div className="min-h-[44px] flex items-center justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogle}
+                    onError={() => toast.error('Google signup failed')}
+                    width="100%"
+                    theme="outline"
+                    size="large"
+                    text="signup_with"
+                    shape="rectangular"
+                  />
+                </div>
+                
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  <FcGoogle size={18} />
-                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Google
-                  </span>
-                </button>
-                <button
-                  type="button"
+                  onClick={handleFacebook}
                   className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
                 >
                   <FaFacebookF size={18} className="text-blue-600" />

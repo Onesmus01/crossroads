@@ -32,6 +32,11 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    authProvider: { 
+        type: String, 
+        enum: ['local', 'google', 'facebook'], 
+        default: 'local' 
+    },
 
     readingProgress: [
         {

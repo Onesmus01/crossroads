@@ -1,6 +1,11 @@
 import User from "../models/userModel.js";
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { OAuth2Client } from 'google-auth-library';
+
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
 
 export const signIn = async (req, res) => {
   try {
@@ -202,3 +207,127 @@ export const updateUser = async (req, res) => {
     }
 };
 
+// ─── GOOGLE SIGN IN / SIGN UP ───
+export const googleSignIn = async (req, res) => {
+  try {
+    const { credential } = req.body; // ID token from Google
+
+    if (!credential) {
+      return res.status(400).json({ success: false, message: "Google credential required" });
+    }
+
+    // Verify token with Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, sub: googleId } = payload;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Google account must have an email" });
+    }
+
+    // Find or create user
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const randomPassword = await bcrypt.hash(googleId + process.env.JWT_SECRET, salt);
+      user = new User({
+        name: name || email.split('@')[0],
+        email,
+        password: randomPassword,
+        role: 'GENERAL',
+      });
+      await user.save();
+    }
+
+    const tokenData = { _id: user._id, email: user.email, role: user.role };
+    const token = jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn: "2d" });
+
+    const isProduction = process.env.NODE_ENV === "production";
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",
+      maxAge: 2 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      token,
+      user: { id: user._id, email: user.email, role: user.role },
+    });
+
+  } catch (error) {
+    console.error("Google SignIn error:", error);
+    return res.status(500).json({ success: false, message: "Google login failed" });
+  }
+};
+
+// ─── FACEBOOK SIGN IN / SIGN UP ───
+export const facebookSignIn = async (req, res) => {
+  try {
+    const { accessToken, userID } = req.body;
+
+    if (!accessToken || !userID) {
+      return res.status(400).json({ success: false, message: "Facebook token and userID required" });
+    }
+
+    // Verify with Facebook Graph API
+    const fbRes = await fetch(
+      `https://graph.facebook.com/v18.0/${userID}?fields=id,name,email&access_token=${accessToken}`
+    );
+    const fbData = await fbRes.json();
+
+    if (fbData.error) {
+      return res.status(401).json({ success: false, message: "Invalid Facebook token" });
+    }
+
+    const { email, name, id: facebookId } = fbData;
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Facebook account must have an email" });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      const salt = await bcrypt.genSalt(10);
+      const randomPassword = await bcrypt.hash(facebookId + process.env.JWT_SECRET, salt);
+      user = new User({
+        name: name || email.split('@')[0],
+        email,
+        password: randomPassword,
+        role: 'GENERAL',
+      });
+      await user.save();
+    }
+
+    const tokenData = { _id: user._id, email: user.email, role: user.role };
+    const token = jwt.sign(tokenData, process.env.JWT_SECRET, { expiresIn: "2d" });
+
+    const isProduction = process.env.NODE_ENV === "production";
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+      path: "/",
+      maxAge: 2 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Facebook login successful",
+      token,
+      user: { id: user._id, email: user.email, role: user.role },
+    });
+
+  } catch (error) {
+    console.error("Facebook SignIn error:", error);
+    return res.status(500).json({ success: false, message: "Facebook login failed" });
+  }
+};

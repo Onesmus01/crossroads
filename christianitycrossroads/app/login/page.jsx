@@ -10,6 +10,7 @@ import { FaFacebookF } from 'react-icons/fa'
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
 import { LogIn, UserPlus, ArrowLeft, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { GoogleLogin } from '@react-oauth/google'          // ADDED
 import { Context } from "@/context/userContext.js"
 import user from '@/public/images/user.png'
 
@@ -57,10 +58,89 @@ export default function Login() {
     }
   }, [searchParams])
 
+  // ─── ADDED: Load Facebook SDK ───
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.FB) {
+      window.fbAsyncInit = function () {
+        FB.init({
+          appId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID,
+          cookie: true,
+          xfbml: true,
+          version: 'v18.0',
+        })
+      }
+      const script = document.createElement('script')
+      script.src = 'https://connect.facebook.net/en_US/sdk.js'
+      script.async = true
+      script.defer = true
+      document.body.appendChild(script)
+    }
+  }, [])
+
   const handleOnChange = (e) => {
     const { name, value } = e.target
     setData((prev) => ({ ...prev, [name]: value }))
     if (showSignupModal) setShowSignupModal(false)
+  }
+
+  // ─── ADDED: Shared social handler (same flow as normal login) ───
+  const handleSocialSuccess = async (endpoint, payload) => {
+    try {
+      const res = await fetch(`${backendUrl}/user/${endpoint}`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const responseData = await res.json()
+
+      if (responseData.success && responseData.token) {
+        localStorage.setItem('token', responseData.token)
+        await fetchUserDetails()
+        toast.success(responseData.message || 'Welcome! 🎉')
+
+        const redirectUrl = sessionStorage.getItem('redirectAfterLogin')
+        const returnToPayment = sessionStorage.getItem('returnToPayment')
+        
+        if (returnToPayment === 'true') {
+          router.push(redirectUrl || '/')
+        } else if (redirectUrl) {
+          sessionStorage.removeItem('redirectAfterLogin')
+          router.push(redirectUrl)
+        } else {
+          router.push('/')
+        }
+      } else {
+        toast.error(responseData.message || 'Social login failed')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Something went wrong!')
+    }
+  }
+
+  // ─── ADDED: Google handler ───
+  const handleGoogle = (credentialResponse) => {
+    handleSocialSuccess('google', { credential: credentialResponse.credential })
+  }
+
+  // ─── ADDED: Facebook handler ───
+  const handleFacebook = () => {
+    if (!window.FB) {
+      toast.error('Facebook SDK not loaded')
+      return
+    }
+    window.FB.login(
+      (response) => {
+        if (response.authResponse) {
+          const { accessToken, userID } = response.authResponse
+          handleSocialSuccess('facebook', { accessToken, userID })
+        } else {
+          toast.error('Facebook login cancelled')
+        }
+      },
+      { scope: 'email,public_profile' }
+    )
   }
 
   const handleSubmit = async (e) => {
@@ -320,16 +400,25 @@ export default function Login() {
                 </div>
               </div>
 
+              {/* ─── SOCIAL LOGIN SECTION (only part that changed) ─── */}
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {/* REPLACED: Google button → GoogleLogin component */}
+                <div className="min-h-[44px] flex items-center justify-center">
+                  <GoogleLogin
+                    onSuccess={handleGoogle}
+                    onError={() => toast.error('Google login failed')}
+                    width="100%"
+                    theme="outline"
+                    size="large"
+                    text="signin_with"
+                    shape="rectangular"
+                  />
+                </div>
+                
+                {/* ADDED: onClick to existing Facebook button */}
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  <FcGoogle size={18} />
-                  <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Google</span>
-                </button>
-                <button
-                  type="button"
+                  onClick={handleFacebook}
                   className="flex items-center justify-center gap-2 px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
                 >
                   <FaFacebookF size={18} className="text-blue-600" />
