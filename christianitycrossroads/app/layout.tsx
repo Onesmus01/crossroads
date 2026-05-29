@@ -29,8 +29,6 @@ export const metadata: Metadata = {
     'Explore Christian books, teachings, and inspirational content that strengthens faith and spiritual growth.',
   metadataBase: new URL('https://www.christianity-at-the-crossroads.com'),
 
-  // ❌ NO HARDCODED CANONICAL HERE — let each page set its own self-referencing canonical
-
   openGraph: {
     title: 'Christianity at the Crossroads',
     description:
@@ -71,7 +69,6 @@ export const metadata: Metadata = {
   },
 
   verification: {
-    // Add your Google Search Console verification string here
     // google: 'your-verification-code',
   },
 
@@ -88,6 +85,23 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={geist.variable} suppressHydrationWarning>
+      <head>
+        {/* Prevents theme flash before hydration */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const saved = localStorage.getItem('theme');
+                  const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = saved || (systemDark ? 'dark' : 'light');
+                  document.documentElement.classList.toggle('dark', theme === 'dark');
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background text-foreground antialiased">
         <LogoutListener>
           <GoogleProvider>

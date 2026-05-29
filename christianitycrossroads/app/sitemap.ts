@@ -7,7 +7,7 @@ async function getBooks() {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/book/all-books`,
-      { next: { revalidate: 86400 } } // 24h cache
+      { next: { revalidate: 86400 } }
     )
 
     if (!res.ok) {
@@ -24,10 +24,9 @@ async function getBooks() {
 }
 
 /* ---------------- SITEMAP ---------------- */
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap(): Promise<<MetadataRoute.Sitemap> {
   const books = await getBooks()
 
-  // Use a fixed build date for static pages so they don't falsely appear "updated" every day
   const staticLastMod = new Date('2026-05-29T00:00:00.000Z')
 
   const bookUrls: MetadataRoute.Sitemap = books
@@ -35,21 +34,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const id = book._id || book.id
       if (!id) return null
 
-      // Use real book timestamps — critical for crawl budget trust
       const lastMod = book.updatedAt
         ? new Date(book.updatedAt)
         : book.createdAt
           ? new Date(book.createdAt)
           : staticLastMod
 
-      const images: string[] = []
-      if (book.coverImage) images.push(book.coverImage)
-      if (book.thumbnail) images.push(book.thumbnail)
+      // FIX: Next.js expects image objects with `url` key, not plain strings
+      const images: { url: string; caption?: string }[] = []
+      if (book.coverImage) images.push({ url: book.coverImage })
+      if (book.thumbnail && book.thumbnail !== book.coverImage) {
+        images.push({ url: book.thumbnail })
+      }
 
       return {
         url: `${baseUrl}/bookDetails/${id}`,
         lastModified: lastMod,
-        changeFrequency: 'weekly',
+        changeFrequency: 'monthly', // books rarely change; weekly wastes crawl budget
         priority: 0.8,
         images: images.length > 0 ? images : undefined,
       }
