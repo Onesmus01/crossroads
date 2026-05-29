@@ -21,10 +21,9 @@ export default function robots(): MetadataRoute.Robots {
           '/orders/*',
           '/api',
           '/api/*',
-          '/_next',
-          '/_next/*',
-          '/*.json$',
-          '/*.xml$', // if you have alternate sitemaps
+          // REMOVED: '/_next' and '/_next/*' — blocks Google from rendering your pages
+          // REMOVED: '/*.json$' — blocks structured data & API responses
+          // REMOVED: '/*.xml$' — blocks sitemaps and alternate language feeds
         ],
       },
       {
