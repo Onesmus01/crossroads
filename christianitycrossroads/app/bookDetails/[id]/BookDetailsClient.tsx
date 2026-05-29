@@ -323,7 +323,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
           className="text-center max-w-md"
         >
           <WifiOff className="w-16 h-16 text-zinc-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Connection Error</h2>
+          <span className="text-2xl font-bold mb-2 text-zinc-900 dark:text-white">Connection Error</span>
           <p className="text-zinc-500 mb-2">{connectionError}</p>
           <p className="text-sm text-zinc-400 mb-6">
             Backend URL: <code className="bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded">{backendUrl}</code>
@@ -363,7 +363,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
       <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900">
         <div className="text-center p-8">
           <AlertCircle className="w-16 h-16 text-zinc-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Book not found</h2>
+          <span className="text-2xl font-bold mb-2">Book not found</span>
           <p className="text-zinc-500 mb-6">The book you're looking for doesn't exist or has been removed.</p>
           <button 
             onClick={() => router.back()} 
@@ -394,7 +394,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
             <div>
-              <h3 className="text-white font-semibold text-sm line-clamp-1">{book.title}</h3>
+              <span className="text-white font-semibold text-sm line-clamp-1">{book.title}</span>
               <p className="text-zinc-400 text-xs">by {book.author}</p>
             </div>
           </div>
@@ -656,7 +656,7 @@ export default function BookDetailsClient({ bookId }: BookDetailsClientProps) {
               <div className="mt-10 flex items-start gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800">
                 <Shield className="w-6 h-6 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Secure & Instant Access</h4>
+                  <span className="font-semibold text-emerald-900 dark:text-emerald-100 mb-1">Secure & Instant Access</span>
                   <p className="text-sm text-emerald-700 dark:text-emerald-300">
                     Once purchased, this book is yours forever. Download it to any device or read online. 
                     All transactions are secured via M-Pesa.

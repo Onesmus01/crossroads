@@ -285,9 +285,9 @@ Parents or guardians who believe their child has provided us with personal data 
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-50 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
                     <section.icon className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-700" />
                   </div>
-                  <h2 className="text-base sm:text-lg lg:text-xl font-bold text-stone-900 pr-4">
+                  <span className="text-base sm:text-lg lg:text-xl font-bold text-stone-900 pr-4">
                     {section.title}
-                  </h2>
+                  </span>
                 </div>
                 <ChevronRight 
                   className={`w-5 h-5 text-stone-400 transition-transform flex-shrink-0 ${
@@ -327,10 +327,10 @@ Parents or guardians who believe their child has provided us with personal data 
             
             <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="space-y-2">
-                <h3 className="text-lg sm:text-xl font-serif font-bold flex items-center gap-2">
+                <span className="text-lg sm:text-xl font-serif font-bold flex items-center gap-2">
                   <Mail className="w-5 h-5" />
                   Data Protection Officer
-                </h3>
+                </span>
                 <p className="text-sm text-emerald-100">
                   For privacy-related queries or to exercise your rights under the Data Protection Act, 2019:
                 </p>

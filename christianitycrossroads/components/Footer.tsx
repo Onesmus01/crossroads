@@ -4,11 +4,11 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-8">
           <div>
-            <h3 className="font-display font-bold text-foreground mb-4">Bookshelf</h3>
+            <span className="font-display font-bold text-foreground mb-4">Bookshelf</span>
             <p className="text-sm text-muted-foreground">Your personal library, beautifully organized.</p>
           </div>
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Browse</h4>
+            <span className="font-semibold text-foreground mb-4">Browse</span>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
@@ -28,7 +28,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Account</h4>
+            <span className="font-semibold text-foreground mb-4">Account</span>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="#" className="hover:text-foreground transition-colors">
@@ -48,7 +48,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Legal</h4>
+            <span className="font-semibold text-foreground mb-4">Legal</span>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <a href="/privacy" className="hover:text-foreground transition-colors">
