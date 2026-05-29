@@ -308,12 +308,12 @@ export default function FeaturesPage() {
             </motion.div>
 
             {/* ✅ h1: This page's main topic */}
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6">
+            <span className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight mb-6">
               Your Digital{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600">
                 Sanctuary
               </span>
-            </h1>
+            </span>
 
             <p className="text-lg sm:text-xl text-zinc-500 dark:text-zinc-400 mb-10 leading-relaxed max-w-2xl mx-auto">
               A premium Christian bookstore built for the modern reader. Discover,

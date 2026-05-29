@@ -108,10 +108,10 @@ export default function ContactPageClient() {
               Let&apos;s <span className="text-amber-700">Connect</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-stone-600 max-w-2xl mx-auto px-2 sm:px-0">
+            <h1 className="text-base sm:text-lg text-stone-600 max-w-2xl mx-auto px-2 sm:px-0">
               Have a question about a book, ministry event, or speaking
               engagement? I&apos;d love to hear from you.
-            </p>
+            </h1>
           </motion.div>
         </div>
       </section>
@@ -128,9 +128,9 @@ export default function ContactPageClient() {
               className="lg:col-span-2 space-y-3 sm:space-y-4"
             >
               <address className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-200 space-y-3 sm:space-y-4 not-italic">
-                <h2 className="text-lg sm:text-xl font-serif font-bold text-stone-900 mb-3 sm:mb-4">
+                <span className="text-lg sm:text-xl font-serif font-bold text-stone-900 mb-3 sm:mb-4">
                   Contact Information
-                </h2>
+                </span>
 
                 {contactInfo.map((item, index) => (
                   <a
@@ -157,9 +157,9 @@ export default function ContactPageClient() {
 
               {/* Social Links */}
               <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-stone-200">
-                <h3 className="text-sm sm:text-base font-bold text-stone-900 mb-3">
+                <span className="text-sm sm:text-base font-bold text-stone-900 mb-3">
                   Follow Ministry
-                </h3>
+                </span>
                 <div className="flex gap-2 sm:gap-3">
                   {socialLinks.map((social, index) => (
                     <a
@@ -178,9 +178,9 @@ export default function ContactPageClient() {
               <div className="bg-amber-900 text-white rounded-2xl p-4 sm:p-6 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-2xl -mr-12 -mt-12" />
                 <div className="relative z-10">
-                  <h3 className="text-base sm:text-lg font-serif font-bold mb-1.5 sm:mb-2">
+                  <span className="text-base sm:text-lg font-serif font-bold mb-1.5 sm:mb-2">
                     Prayer Requests
-                  </h3>
+                  </span>
                   <p className="text-xs sm:text-sm text-amber-100 leading-relaxed">
                     For urgent prayer requests, please mark your message as
                     &quot;Prayer&quot; in the subject line.
@@ -197,9 +197,9 @@ export default function ContactPageClient() {
               className="lg:col-span-3"
             >
               <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-stone-200 p-5 sm:p-8 lg:p-10">
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900 mb-5 sm:mb-6">
+                <span className="text-xl sm:text-2xl font-serif font-bold text-stone-900 mb-5 sm:mb-6">
                   Send a Message
-                </h2>
+                </span>
 
                 <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">

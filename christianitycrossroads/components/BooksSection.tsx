@@ -313,7 +313,7 @@ export function BooksSection({
                   {books.length} {books.length === 1 ? 'Book' : 'Books'}
                 </span>
               </div>
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight">{title}</h2>
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight">{title}</h1>
               {description && <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl">{description}</p>}
             </div>
           </div>

@@ -12,15 +12,16 @@ function Hero() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 w-full h-full">
         <Image
-          src={heroImage}      // ← static import, not string
-          alt="..."
-          fill
-          priority
-          quality={60}
-          sizes="100vw"
-          placeholder="blur"    // ← now works!
-          className="object-cover"
-        />
+  src={heroImage}
+  alt="Christian inspiration hero banner"
+  title="Christianity at the Crossroads hero section"
+  width={1920}
+  height={1080}
+  priority
+  quality={60}
+  placeholder="blur"
+  className="w-full h-[60vh] sm:h-[70vh] lg:h-screen object-cover"
+/>
         <div className="absolute inset-0 bg-black/40 dark:bg-black/50" />
       </div>
 
