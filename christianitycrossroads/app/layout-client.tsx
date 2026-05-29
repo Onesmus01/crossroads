@@ -1,14 +1,17 @@
-// layout-client.tsx — FIXED
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 
 export function RootLayoutClient({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     const saved = localStorage.getItem('theme') || 'dark';
     document.documentElement.classList.toggle('dark', saved === 'dark');
   }, []);
 
-  // NEVER return null — always render children for SSR
+  if (!mounted) return null;
+
   return <>{children}</>;
 }
