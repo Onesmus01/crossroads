@@ -24,7 +24,7 @@ async function getBooks() {
 }
 
 /* ---------------- SITEMAP ---------------- */
-export default async function sitemap(): Promise<<MetadataRoute.Sitemap> {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const books = await getBooks()
 
   // Use a fixed build date for static pages so they don't falsely appear "updated" every day
