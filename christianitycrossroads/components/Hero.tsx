@@ -2,28 +2,30 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import heroImage from '@/public/hero-crossroads.jpg'; // Import for build-time optimization
+import { useRouter } from 'next/navigation';
+import heroImage from '@/public/hero-crossroads.jpg';
 
 function Hero() {
   const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
 
   return (
     <section className="relative w-full h-[55vh] sm:h-[60vh] lg:h-screen overflow-hidden">
-      {/* Background Image with Overlay */}
-      <div className="absolute inset-0 w-full h-full">
-        <Image
-  src={heroImage}
-  alt="Christian inspiration hero banner"
-  title="Christianity at the Crossroads hero section"
-  width={1920}
-  height={1080}
-  priority
-  quality={60}
-  placeholder="blur"
-  className="w-full h-[60vh] sm:h-[70vh] lg:h-screen object-cover"
-/>
-        <div className="absolute inset-0 bg-black/40 dark:bg-black/50" />
-      </div>
+      {/* Background Image */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+  <Image
+    src={heroImage}
+    alt="Christian inspiration hero banner"
+    width={512}
+    height={512}
+    priority
+    quality={60}
+    placeholder="blur"
+    sizes="100vw"
+    className="object-cover w-full h-full"
+  />
+  <div className="absolute inset-0 bg-black/40 dark:bg-black/50" aria-hidden="true" />
+</div>
 
       {/* Content */}
       <div className="relative h-full flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -31,13 +33,15 @@ function Hero() {
           
           {/* Badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20">
-            <span className="text-primary text-xs sm:text-sm font-medium tracking-wide">Curated Collection</span>
+            <span className="text-primary text-xs sm:text-sm font-medium tracking-wide">
+              Curated Collection
+            </span>
           </div>
 
-          {/* Heading */}
+          {/* Heading — now a proper h1 for SEO */}
           <div className="space-y-2 sm:space-y-3">
-            <span className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] sm:leading-tight">
-              Christianity{' '}
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold leading-[1.1] sm:leading-tight">
+              <span className="text-white">Christianity </span>
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 at
               </span>
@@ -45,7 +49,7 @@ function Hero() {
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 Crossroads
               </span>
-            </span>
+            </h1>
             <p className="text-sm sm:text-base lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
               Discover sacred wisdom, spiritual growth, and faith-centered literature.
             </p>
@@ -54,7 +58,7 @@ function Hero() {
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 pt-1 sm:pt-2">
             <button
-            onClick={()=> window.location.href = '/books'}  // Navigate to collections page
+              onClick={() => router.push('/books')}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
               className="relative w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg bg-primary text-primary-foreground text-sm sm:text-base font-medium transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 active:scale-95"
@@ -62,10 +66,13 @@ function Hero() {
               Explore Collection
               <span 
                 className="absolute inset-0 rounded-lg bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 opacity-0 hover:opacity-100 transition-opacity duration-500"
-                aria-hidden="true"  // Decorative element — hide from screen readers
+                aria-hidden="true"
               />
             </button>
-            <button className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm sm:text-base font-medium transition-all duration-300 hover:bg-white/20 hover:border-white/30 active:scale-95">
+            <button 
+              onClick={() => router.push('/about')}
+              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm sm:text-base font-medium transition-all duration-300 hover:bg-white/20 hover:border-white/30 active:scale-95"
+            >
               Learn More
             </button>
           </div>

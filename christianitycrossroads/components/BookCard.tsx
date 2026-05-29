@@ -190,9 +190,9 @@ export function BookCard({
           {genre}
         </span>
 
-        <h3 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 mb-0.5 sm:mb-1 line-clamp-1 group-hover:text-primary transition-colors" itemProp="name">
+        <span className="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 mb-0.5 sm:mb-1 line-clamp-1 group-hover:text-primary transition-colors" itemProp="name">
           {title}
-        </h3>
+        </span>
 
         <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4" itemProp="author">
           by {author}
