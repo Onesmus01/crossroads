@@ -41,10 +41,8 @@ function Hero() {
           {/* Heading — now a proper h1 for SEO */}
           <div className="space-y-2 sm:space-y-3">
             <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold leading-[1.1] sm:leading-tight">
-              <span className="text-white">Christianity </span>
-              <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
-                at
-              </span>
+              <span className="text-white">Christianity</span>
+              <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">at</span>
               <br className="hidden sm:block" />
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 Crossroads

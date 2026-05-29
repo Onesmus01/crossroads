@@ -164,7 +164,7 @@ export default function AboutPage() {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-2">
                 <Heart className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">The Ministry</h2>
+              <span className="text-xl sm:text-2xl font-serif font-bold text-stone-900">The Ministry</span>
               <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
                 For over fifteen years, Reverend Mboya has served as a beacon of hope in communities across Kenya. 
                 His ministry extends beyond the pulpit—reaching into prisons, schools, and rural villages where 
@@ -183,7 +183,7 @@ export default function AboutPage() {
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-2">
                 <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-amber-700" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">The Writing</h2>
+              <span className="text-xl sm:text-2xl font-serif font-bold text-stone-900">The Writing</span>
               <p className="text-sm sm:text-base text-stone-600 leading-relaxed">
                 With twelve published works spanning devotional literature, theological studies, and inspirational 
                 memoirs, Reverend Mboya has established himself as a voice for authentic Christian living in Africa. 
@@ -208,7 +208,7 @@ export default function AboutPage() {
             <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full blur-2xl -ml-24 -mb-24" />
             
             <div className="relative z-10 max-w-2xl">
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-3 sm:mb-4">My Mission</h2>
+              <span className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold mb-3 sm:mb-4">My Mission</span>
               <p className="text-base sm:text-lg text-amber-100 leading-relaxed mb-6 sm:mb-8">
                 To inspire transformation through the written word, bringing hope to the hopeless and clarity to the seeking. 
                 Every book is a prayer, every page an invitation to encounter grace.
