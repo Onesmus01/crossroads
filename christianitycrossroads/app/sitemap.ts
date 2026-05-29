@@ -24,7 +24,7 @@ async function getBooks() {
 }
 
 /* ---------------- SITEMAP ---------------- */
-export default async function sitemap(): Promise<<MetadataRoute.Sitemap> {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const books = await getBooks()
 
   const staticLastMod = new Date('2026-05-29T00:00:00.000Z')
