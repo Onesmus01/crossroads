@@ -35,7 +35,7 @@ function Hero() {
 
           {/* Heading */}
           <div className="space-y-2 sm:space-y-3">
-            <h2 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] sm:leading-tight">
+            <span className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold text-white leading-[1.1] sm:leading-tight">
               Christianity{' '}
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 at
@@ -44,7 +44,7 @@ function Hero() {
               <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent">
                 Crossroads
               </span>
-            </h2>
+            </span>
             <p className="text-sm sm:text-base lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed px-2 sm:px-0">
               Discover sacred wisdom, spiritual growth, and faith-centered literature.
             </p>

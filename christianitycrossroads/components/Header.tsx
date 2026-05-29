@@ -76,6 +76,14 @@ export function Header() {
 
   return (
     <>
+      {/* Skip to content link for accessibility */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[60] focus:px-4 focus:py-2 focus:bg-zinc-900 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+      >
+        Skip to main content
+      </a>
+
       <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
         scrolled 
           ? 'bg-white/90 dark:bg-zinc-950/90 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800 shadow-sm' 
@@ -85,7 +93,11 @@ export function Header() {
           <div className="flex items-center justify-between h-14 sm:h-16">
             
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
+            <Link 
+              href="/" 
+              className="flex items-center gap-2.5 group flex-shrink-0"
+              aria-label="Christianity at the Crossroads Home"
+            >
               <div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
                 <span className="font-bold text-white dark:text-zinc-900 text-sm">CC</span>
               </div>
@@ -95,11 +107,15 @@ export function Header() {
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav 
+              className="hidden md:flex items-center gap-1"
+              aria-label="Main navigation"
+            >
               {navLinks.map((link) => (
                 <Link 
                   key={link.href}
                   href={link.href} 
+                  aria-current={pathname === link.href ? 'page' : undefined}
                   className={`relative px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     pathname === link.href 
                       ? 'text-zinc-900 dark:text-white' 
@@ -123,6 +139,8 @@ export function Header() {
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors border border-transparent hover:border-zinc-200 dark:hover:border-zinc-800"
+                    aria-expanded={profileOpen}
+                    aria-haspopup="true"
                   >
                     <div className={`w-7 h-7 flex items-center justify-center rounded-full text-white text-xs font-semibold ${getAvatarColor(firstLetter)}`}>
                       {firstLetter}
@@ -130,7 +148,7 @@ export function Header() {
                     <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 max-w-[100px] truncate">
                       {user.name}
                     </span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-zinc-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                   </button>
 
                   {profileOpen && (
@@ -153,19 +171,19 @@ export function Header() {
                         )}
                         
                         <Link href="/manageProfile" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                          <User className="w-4 h-4" />
+                          <User className="w-4 h-4" aria-hidden="true" />
                           Profile
                         </Link>
                         <Link href="/wishlist" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                          <Heart className="w-4 h-4" />
+                          <Heart className="w-4 h-4" aria-hidden="true" />
                           Wishlist
                         </Link>
                         <Link href="/orders" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                          <ShoppingBag className="w-4 h-4" />
+                          <ShoppingBag className="w-4 h-4" aria-hidden="true" />
                           Orders
                         </Link>
                         <Link href="/settings" onClick={() => setProfileOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors">
-                          <Settings className="w-4 h-4" />
+                          <Settings className="w-4 h-4" aria-hidden="true" />
                           Settings
                         </Link>
                       </div>
@@ -175,7 +193,7 @@ export function Header() {
                           onClick={handleLogout}
                           className="flex items-center gap-2.5 w-full px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors"
                         >
-                          <LogOut className="w-4 h-4" />
+                          <LogOut className="w-4 h-4" aria-hidden="true" />
                           Log out
                         </button>
                       </div>
@@ -199,8 +217,10 @@ export function Header() {
                 onClick={() => setIsOpen(true)}
                 className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
                 aria-label="Open menu"
+                aria-expanded={isOpen}
+                aria-controls="mobile-menu"
               >
-                <Menu className="w-5 h-5 text-zinc-700 dark:text-zinc-300" />
+                <Menu className="w-5 h-5 text-zinc-700 dark:text-zinc-300" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -208,7 +228,10 @@ export function Header() {
       </header>
 
       {/* Mobile Drawer */}
-      <div className={`md:hidden fixed inset-0 z-50 transition-opacity duration-200 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      <div 
+        id="mobile-menu"
+        className={`md:hidden fixed inset-0 z-50 transition-opacity duration-200 ${isOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+      >
         <div 
           className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
@@ -222,8 +245,9 @@ export function Header() {
             <button 
               onClick={() => setIsOpen(false)}
               className="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+              aria-label="Close menu"
             >
-              <X className="w-5 h-5 text-zinc-500" />
+              <X className="w-5 h-5 text-zinc-500" aria-hidden="true" />
             </button>
           </div>
 
@@ -254,12 +278,13 @@ export function Header() {
               )}
 
               {/* Nav Links */}
-              <nav className="space-y-1">
+              <nav className="space-y-1" aria-label="Mobile navigation">
                 {navLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
+                    aria-current={pathname === link.href ? 'page' : undefined}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       pathname === link.href 
                         ? 'bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-white' 
@@ -289,19 +314,19 @@ export function Header() {
                   )}
                   
                   <Link href="/manageProfile" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                    <User className="w-4 h-4" />
+                    <User className="w-4 h-4" aria-hidden="true" />
                     Profile
                   </Link>
                   <Link href="/wishlist" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                    <Heart className="w-4 h-4" />
+                    <Heart className="w-4 h-4" aria-hidden="true" />
                     Wishlist
                   </Link>
                   <Link href="/orders" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                    <ShoppingBag className="w-4 h-4" />
+                    <ShoppingBag className="w-4 h-4" aria-hidden="true" />
                     Orders
                   </Link>
                   <Link href="/settings" onClick={() => setIsOpen(false)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                    <Settings className="w-4 h-4" />
+                    <Settings className="w-4 h-4" aria-hidden="true" />
                     Settings
                   </Link>
                 </div>
@@ -315,7 +340,7 @@ export function Header() {
                   onClick={handleLogout}
                   className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-4 h-4" aria-hidden="true" />
                   Log out
                 </button>
               </div>

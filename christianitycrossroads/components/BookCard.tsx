@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Star, Heart, Lock, Download, Play, Sparkles, TrendingUp, CheckCircle } from 'lucide-react';
+import { Star, Heart, Lock, Download, TrendingUp, CheckCircle, Sparkles } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 
@@ -22,6 +22,7 @@ interface BookCardProps {
   isBestseller?: boolean;
   isUnlocked?: boolean;
   onPay?: (book: any) => void;
+  priority?: boolean;
 }
 
 export function BookCard({
@@ -36,6 +37,7 @@ export function BookCard({
   isBestseller,
   isUnlocked: initialUnlocked = false,
   onPay,
+  priority = false,
 }: BookCardProps) {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
@@ -85,6 +87,8 @@ export function BookCard({
       className="group relative bg-white dark:bg-zinc-900 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-zinc-200 dark:border-zinc-800 cursor-pointer h-full flex flex-col rounded-lg"
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
+      itemScope
+      itemType="https://schema.org/Book"
     >
       {/* Image Container */}
       <div className="relative aspect-[2/3] overflow-hidden bg-zinc-100 dark:bg-zinc-800">
@@ -93,12 +97,14 @@ export function BookCard({
             <Image
               src={coverImage}
               alt={`Cover of ${title}`}
-              fill
+              title={`${title} book cover`}
+              width={280}
+              height={420}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
               quality={75}
-              priority={isBestseller}
-              loading={isBestseller ? 'eager' : 'lazy'}
-              className={`object-cover transition-all duration-500 ${
+              priority={priority}
+              loading={priority ? 'eager' : 'lazy'}
+              className={`object-cover w-full h-full transition-all duration-500 ${
                 isHovered ? 'scale-105' : 'scale-100'
               } ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
@@ -123,7 +129,7 @@ export function BookCard({
         {/* ─── BADGES ─── */}
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-1.5 z-10">
           
-          {/* YOURS badge — replaces nothing, just added */}
+          {/* YOURS badge */}
           {isOwned && (
             <motion.span
               initial={{ scale: 0, opacity: 0 }}
@@ -184,11 +190,11 @@ export function BookCard({
           {genre}
         </span>
 
-        <h3 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 mb-0.5 sm:mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+        <h3 className="font-bold text-sm sm:text-base text-zinc-900 dark:text-zinc-100 mb-0.5 sm:mb-1 line-clamp-1 group-hover:text-primary transition-colors" itemProp="name">
           {title}
         </h3>
 
-        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4">
+        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mb-3 sm:mb-4" itemProp="author">
           by {author}
         </p>
 
@@ -198,7 +204,10 @@ export function BookCard({
             {isOwned ? (
               <span className="text-xs sm:text-sm font-bold text-emerald-600">Paid</span>
             ) : (
-              <span className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-white">
+              <span className="text-sm sm:text-lg font-bold text-zinc-900 dark:text-white" itemProp="offers" itemScope itemType="https://schema.org/Offer">
+                <meta itemProp="priceCurrency" content="KES" />
+                <meta itemProp="price" content={String(price)} />
+                <meta itemProp="availability" content="https://schema.org/InStock" />
                 {isFree ? 'Free' : `KES ${price}`}
               </span>
             )}

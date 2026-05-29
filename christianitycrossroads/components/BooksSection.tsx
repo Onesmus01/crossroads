@@ -84,7 +84,6 @@ export function BooksSection({
 
       const token = getAuthToken();
 
-      // ─── 1. Fetch all books (public) ─────────
       const res = await fetch(`${backendUrl}/book/all-books`, {
         credentials: 'include',
         headers: {
@@ -125,23 +124,16 @@ export function BooksSection({
 
       setBooks(filtered);
 
-      // ═══════════════════════════════════════════════════════════════════════
-      //  SECURITY: Build paidBookIds ONLY from authenticated backend sources.
-      //  localStorage is NEVER used for ownership — it leaks across users.
-      // ═══════════════════════════════════════════════════════════════════════
       const paidIds = new Set<string>();
 
-      // Source 1: Per-user backend flags in /all-books response (if your API sends them)
       if (token && Array.isArray(data.books)) {
         data.books.forEach((b: any) => {
-          // Only trust these if they come from authenticated, per-user backend response
           if (b.isPurchased === true || b.isOwned === true || b.hasAccess === true) {
             paidIds.add(b._id || b.id);
           }
         });
       }
 
-      // Source 2: Dedicated ownership endpoint (authenticated, token-required)
       if (token) {
         try {
           const ownershipRes = await fetch(`${backendUrl}/book/my-books`, {
@@ -204,6 +196,37 @@ export function BooksSection({
 
   const variantStyle = getVariantStyles();
 
+  const baseUrl = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : 'https://www.christianity-at-the-crossroads.com';
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: books.map((book, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Book',
+        name: book.title,
+        author: { '@type': 'Person', name: book.author },
+        image: book.coverImage,
+        url: `${baseUrl}/bookDetails/${book.id}`,
+        offers: {
+          '@type': 'Offer',
+          price: book.price,
+          priceCurrency: 'KES',
+          availability: 'https://schema.org/InStock',
+        },
+        aggregateRating: book.rating ? {
+          '@type': 'AggregateRating',
+          ratingValue: book.rating,
+          bestRating: 5,
+        } : undefined,
+      },
+    })),
+  };
+
   if (loading) {
     return (
       <section className="py-10 sm:py-16 lg:py-24 relative overflow-hidden">
@@ -263,7 +286,10 @@ export function BooksSection({
   }
 
   return (
-    <section className="py-10 sm:py-16 lg:py-24 relative overflow-hidden">
+    <section 
+      className="py-10 sm:py-16 lg:py-24 relative overflow-hidden"
+      aria-label={title}
+    >
       {variantStyle && (
         <div className={`absolute inset-0 bg-gradient-to-b ${variantStyle.gradient} opacity-30 pointer-events-none`} />
       )}
@@ -278,12 +304,12 @@ export function BooksSection({
               <div className="flex items-center gap-2 flex-wrap">
                 {variantStyle && (
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${variantStyle.badge} text-white text-xs font-bold shadow-lg`}>
-                    <variantStyle.icon className="w-3.5 h-3.5" />
+                    <variantStyle.icon className="w-3.5 h-3.5" aria-hidden="true" />
                     {variantStyle.text}
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
-                  <BookOpen className="w-3.5 h-3.5" />
+                  <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
                   {books.length} {books.length === 1 ? 'Book' : 'Books'}
                 </span>
               </div>
@@ -300,7 +326,7 @@ export function BooksSection({
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6"
         >
           <AnimatePresence mode='popLayout'>
-            {books.map((book) => (
+            {books.map((book, index) => (
               <motion.div
                 key={book.id}
                 variants={itemVariants}
@@ -312,6 +338,7 @@ export function BooksSection({
                   {...book} 
                   isHovered={hoveredBook === book.id}
                   isUnlocked={paidBookIds.has(book.id)}
+                  priority={index < 5}
                 />
               </motion.div>
             ))}
@@ -321,11 +348,18 @@ export function BooksSection({
         {books.length > 10 && (
           <div className="mt-8 sm:mt-12 text-center">
             <button className="inline-flex items-center gap-2 px-6 py-3 bg-muted hover:bg-muted/80 rounded-full font-medium text-sm transition-colors">
-              View All Books <ChevronRight className="w-4 h-4" />
+              View All Books <ChevronRight className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
         )}
       </div>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(structuredData),
+        }}
+      />
     </section>
   );
 }

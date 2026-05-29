@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
-
 import { Header } from '@/components/Header'
 import Hero from '@/components/Hero'
 import { BooksSection } from '@/components/BooksSection'
 import { Footer } from '@/components/Footer'
-import FeaturesPage  from '@/components/FeaturesPage'
-import  AnimateDriver  from '@/components/AnimateDriver'
+import FeaturesPage from '@/components/FeaturesPage'
+import AnimateDriver from '@/components/AnimateDriver'
 import Conveyor from '@/components/Conveyor'
-/* ---------------- BASE URL (PRIMARY DOMAIN ONLY) ---------------- */
+
 const baseUrl = 'https://www.christianity-at-the-crossroads.com'
 
 /* ---------------- SEO METADATA ---------------- */
@@ -22,50 +21,39 @@ export const metadata: Metadata = {
   description:
     'Christian books, devotionals, teachings, and inspirational content to strengthen faith and support spiritual growth.',
 
-  keywords: [
-    'Christianity at the Crossroads',
-    'Christian Books',
-    'Bible Teachings',
-    'Faith',
-    'Devotionals',
-    'Spiritual Growth',
-    'Christian Inspiration',
-  ],
-
-  /* IMPORTANT: forces single canonical identity */
+  // ✅ Homepage canonical is correct here — but NEVER copy this exact
+  // `alternates: { canonical: baseUrl }` pattern to other pages.
+  // Other pages must use their own path, e.g. `/books`, `/about`, etc.
   alternates: {
-    canonical: baseUrl,
+    canonical: '/',
   },
 
-  /* ---------------- OPEN GRAPH ---------------- */
   openGraph: {
     title: 'Christianity at the Crossroads',
     description:
       'Discover Christian books, devotionals, teachings, and faith-based inspiration.',
-    url: baseUrl,
+    url: '/',
     siteName: 'Christianity at the Crossroads',
     type: 'website',
+    locale: 'en_US',
     images: [
       {
-        url: `${baseUrl}/og-image.jpg`,
+        url: '/og-image.jpg', // resolves via metadataBase
         width: 1200,
         height: 630,
         alt: 'Christianity at the Crossroads',
       },
     ],
   },
-  
 
-  /* ---------------- TWITTER ---------------- */
   twitter: {
     card: 'summary_large_image',
     title: 'Christianity at the Crossroads',
     description:
       'Christian books, devotionals, teachings, and inspirational content for spiritual growth.',
-    images: [`${baseUrl}/og-image.jpg`],
+    images: ['/og-image.jpg'],
   },
 
-  /* ---------------- ROBOTS (GOOGLE OPTIMIZED) ---------------- */
   robots: {
     index: true,
     follow: true,
@@ -79,37 +67,50 @@ export const metadata: Metadata = {
   },
 }
 
-/* ---------------- STRUCTURED DATA (SEO ENTITY BOOST) ---------------- */
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebSite',
-      name: 'Christianity at the Crossroads',
-      url: baseUrl,
-      description:
-        'Christian books, teachings, devotionals, and inspirational content.',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: `${baseUrl}/search?q={query}`,
-        'query-input': 'required name=query',
+/* ---------------- STRUCTURED DATA ---------------- */
+function StructuredData() {
+  const data = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        name: 'Christianity at the Crossroads',
+        url: baseUrl,
+        description:
+          'Christian books, teachings, devotionals, and inspirational content.',
+        potentialAction: {
+          '@type': 'SearchAction',
+          // ✅ Fixed: Google expects this exact placeholder name
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${baseUrl}/books?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
       },
-    },
-    {
-      '@type': 'Organization',
-      name: 'Christianity at the Crossroads',
-      url: baseUrl,
-      logo: `${baseUrl}/logo.png`,
-      sameAs: [],
-    },
-  ],
+      {
+        '@type': 'Organization',
+        name: 'Christianity at the Crossroads',
+        url: baseUrl,
+        logo: `${baseUrl}/logo.png`,
+        // Only include sameAs when you actually have social links:
+        // sameAs: ['https://facebook.com/...', 'https://instagram.com/...'],
+      },
+    ],
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+    />
+  )
 }
 
 /* ---------------- HOME PAGE ---------------- */
 export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-
       <main className="flex-1">
         <Hero />
         <Conveyor speed={0.6} bookHeight={30} className="my-2" />
@@ -121,7 +122,7 @@ export default function Home() {
             variant="featured"
           />
         </div>
-        {/* <AnimateDriver variant="pulse" className="my-12" height={4} width="100%" center /> */}
+
         <AnimateDriver
           variant="shimmer"
           color="custom"
@@ -130,16 +131,11 @@ export default function Home() {
           height="2px"
           center
         />
+
         <FeaturesPage />
       </main>
 
-      {/* JSON-LD SEO (GOOGLE UNDERSTANDING LAYER) */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(structuredData),
-        }}
-      />
+      <StructuredData />
     </div>
   )
 }

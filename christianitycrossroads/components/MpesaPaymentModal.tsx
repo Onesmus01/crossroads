@@ -281,7 +281,7 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                     </motion.div>
                     
                     <div className="space-y-2">
-                      <h4 className="font-bold text-xl dark:text-white">Login Required</h4>
+                      <span className="font-bold text-xl dark:text-white">Login Required</span>
                       <p className="text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
                         Please login first to complete your purchase of <span className="font-semibold">"{book.title}"</span>
                       </p>
