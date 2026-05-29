@@ -99,19 +99,19 @@ export default function ContactPageClient() {
             transition={{ duration: 0.6 }}
             className="space-y-3 sm:space-y-4"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-xs sm:text-sm font-medium">
+            <h1 className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-800 rounded-full text-xs sm:text-sm font-medium">
               <MessageCircle className="w-3.5 h-3.5" aria-hidden="true" />
-              Get in Touch
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900">
-              Let&apos;s <span className="text-amber-700">Connect</span>
+              Get in Touch and contact 
             </h1>
 
-            <h1 className="text-base sm:text-lg text-stone-600 max-w-2xl mx-auto px-2 sm:px-0">
+            <span className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-stone-900">
+              Let&apos;s <span className="text-amber-700">Connect</span>
+            </span>
+
+            <span className="text-base sm:text-lg text-stone-600 max-w-2xl mx-auto px-2 sm:px-0">
               Have a question about a book, ministry event, or speaking
               engagement? I&apos;d love to hear from you.
-            </h1>
+            </span>
           </motion.div>
         </div>
       </section>

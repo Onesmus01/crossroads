@@ -254,7 +254,7 @@ export function MpesaPaymentModal({ isOpen, onClose, book, onSuccess }: MpesaPay
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-emerald-100 text-sm font-medium">Paying for</p>
-                  <h3 className="font-bold text-lg line-clamp-1">{book.title}</h3>
+                  <span className="font-bold text-lg line-clamp-1">{book.title}</span>
                   <p className="text-2xl font-bold mt-1">KES {book.price.toLocaleString()}</p>
                 </div>
               </div>

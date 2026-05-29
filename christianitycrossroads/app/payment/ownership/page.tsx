@@ -142,7 +142,7 @@ export default function OwnershipPage() {
             >
               <div className="shrink-0 mt-0.5">{feature.icon}</div>
               <div className="text-left">
-                <h3 className={`font-bold ${feature.text}`}>{feature.title}</h3>
+                <span className={`font-bold ${feature.text}`}>{feature.title}</span>
                 <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed">
                   {feature.description}
                 </p>

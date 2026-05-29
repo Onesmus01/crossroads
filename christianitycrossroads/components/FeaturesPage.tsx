@@ -62,9 +62,9 @@ function FeatureCard({
         <Icon className="w-6 h-6 text-white" aria-hidden="true" />
       </div>
       {/* ✅ h3 → h4: feature items are subsections of h3 "Built for Readers" */}
-      <h4 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">
+      <span className="text-lg font-bold text-zinc-900 dark:text-white mb-2">
         {title}
-      </h4>
+      </span>
       <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
         {description}
       </p>
@@ -124,9 +124,9 @@ function StepCard({
         </span>
       </div>
       {/* ✅ h3 → h4: step items are subsections of h3 "Start Reading in Seconds" */}
-      <h4 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">
+      <span className="text-lg font-bold text-zinc-900 dark:text-white mb-2">
         {title}
-      </h4>
+      </span>
       <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs leading-relaxed">
         {description}
       </p>
@@ -366,12 +366,12 @@ export default function FeaturesPage() {
                 Powerful Features
               </span>
               {/* ✅ h2: section heading */}
-              <h2
+              <span
                 id="features-heading"
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-4"
               >
                 Built for Readers
-              </h2>
+              </span>
               <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto">
                 Every feature designed to make your reading experience seamless,
                 secure, and spiritually enriching.
@@ -404,12 +404,12 @@ export default function FeaturesPage() {
                 Simple Process
               </span>
               {/* ✅ h2: section heading */}
-              <h2
+              <span
                 id="steps-heading"
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-4"
               >
                 Start Reading in Seconds
-              </h2>
+              </span>
               <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto">
                 Three simple steps between you and your next transformative read.
               </p>
@@ -439,7 +439,7 @@ export default function FeaturesPage() {
                 Why Crossroads
               </span>
               {/* ✅ h2: section heading */}
-              <h2
+              <span
                 id="why-heading"
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-6"
               >
@@ -447,7 +447,7 @@ export default function FeaturesPage() {
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">
                   Reader-First
                 </span>
-              </h2>
+              </span>
               <p className="text-zinc-500 dark:text-zinc-400 mb-8 leading-relaxed">
                 We believe great Christian literature should be accessible to
                 everyone. Our platform combines cutting-edge technology with a
@@ -522,12 +522,12 @@ export default function FeaturesPage() {
                 Testimonials
               </span>
               {/* ✅ h2: section heading */}
-              <h2
+              <span
                 id="testimonials-heading"
                 className="text-3xl sm:text-4xl lg:text-5xl font-bold mt-3 mb-4"
               >
                 Loved by Readers
-              </h2>
+              </span>
               <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto">
                 See what our community has to say about their experience.
               </p>
@@ -568,7 +568,7 @@ export default function FeaturesPage() {
             transition={{ duration: 0.6 }}
           >
             {/* ✅ h2: section heading */}
-            <h2
+            <span
               id="cta-heading"
               className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
             >
@@ -576,7 +576,7 @@ export default function FeaturesPage() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600">
                 Journey Today
               </span>
-            </h2>
+            </span>
             <p className="text-zinc-500 dark:text-zinc-400 text-lg mb-10 max-w-2xl mx-auto">
               Join thousands of readers discovering life-changing Christian
               literature. Your next great read is just a click away.
